@@ -177,10 +177,10 @@ public:
     stackk<card> tableau5;
     stackk<card> tableau6;
     stackk<card> tableau7;
-    stackk<card> foundatonHearts;
-    stackk<card> foundatonDiamonds;
-    stackk<card> foundatonClubs;
-    stackk<card> foundatonSpades;
+    stackk<card> foundationHearts{13};
+    stackk<card> foundationDiamonds{13};
+    stackk<card> foundationClubs{13};
+    stackk<card> foundationSpades{13};
     Deck ()
     {
     }
@@ -314,16 +314,25 @@ void move_to_tableau (stackk<card>& tableau, stackk<card>& source)
     }
     void drawtowastee ()
     {
+        int draw=3;
+        card c;
         if (stock.is_emptyy())
         {
             recyclewastetostock();
         }
-        card c;
-        if (!stock.is_emptyy())
+        for (int i=0; i<draw && !stock.is_emptyy(); i++)
         {
-        stock.pop(c);
-        c.faceup=true;
-        waste.push(c);
+            stock.pop(c);
+            c.faceup=true;
+            waste.push(c);
+        }
+        if (!waste.is_emptyy())
+        {
+            cout<<"Top of waste "<<waste.topp().intostring()<<endl;
+        }
+        else
+        {
+            cout<<"Waste is empty"<<endl;
         }
 
     }
@@ -415,9 +424,120 @@ void flip_tableau_top (stackk <card> &tableau)
         }
     }
 }
+void move_sequence_to_tableau (stackk<card> &source,stackk<card> &destination, int start)
+{
+    if (source.is_emptyy())
+    {
+        cout<<"Source is empty"<<endl;
+        return;
+    }
+    stackk<card> temp;
+    card c;
 
+    int countt=source.topp().rankk;
+    int total=0;
+    stackk<card> reverse_stack;
 
+    while (!source.is_emptyy())
+    {
+        source.pop(c);
+        temp.push(c);
+    }
+    int i=0;
+    if (!temp.is_emptyy())
+    {
+        temp.pop(c);
+        if (i<start)
+        {
+            reverse_stack.push(c);
+        }
+        else
+        {
+            source.push(c);
+            i++;
+        }
+    }
+
+    card bottom=source.topp();
+    if (!can_move_to_tableau(destination,bottom))
+    { cout<<"Cannot move sequence to tableau move is illegal"<<endl;
+
+        while (!source.is_emptyy())
+        {
+            source.pop(c);
+            temp.push(c);
+        }
+       while (!reverse_stack.is_emptyy())
+        {
+            reverse_stack.pop(c);
+            temp.push(c);
+        }
+        while (!temp.is_emptyy())
+        {
+            temp.pop(c);
+            source.push(c);
+        }
+        return;
+
+    }
+    stackk<card> finalstack;
+    while (!source.is_emptyy())
+    {
+        source.pop(c);
+        finalstack.push(c);
+    }
+    while (!finalstack.is_emptyy())
+    {
+        finalstack.pop(c);
+        destination.push(c);
+    }
+    while (!reverse_stack.is_emptyy())
+    {
+        reverse_stack.pop(c);
+        source.push(c);
+    }
+    flip_tableau_top(source);
+    cout<<"Sequence moved successfully"<<endl;
+}
+void move_waste_to_tableau (stackk<card> & tableau)
+{
+    if (waste.is_emptyy())
+    {
+        cout<<"Waste is empty"<<endl;
+        return;
+    }
+    move_to_tableau(tableau,waste);
+}
+
+void move_waste_to_foundation (stackk<card> & foundation)
+{
+    if (waste.is_emptyy())
+    {
+        cout<<"Waste is empty"<<endl;
+        return;
+    }
+    move_to_foundation(foundation,waste);
+}
+
+void move_tableau_to_foundation (stackk<card>& tableau , stackk <card>& foundation)
+{
+    if (tableau.is_emptyy())
+    {
+cout<<"Tableau is empty"<<endl;
+return;
+    }
+    move_to_foundation(foundation,tableau);
+}
+bool check_win ()
+{
+    if (foundationHearts.is_full()&&foundationDiamonds.is_full()&&foundationClubs.is_full()&&foundationSpades.is_full())
+    {
+return true;
+    }
+    return false;
+}
 };
+
 
 int main()
 {
