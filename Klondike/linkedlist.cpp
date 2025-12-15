@@ -84,56 +84,75 @@ public:
     }
 
     void delete_end() {
-        
+        if (tail == NULL) return;
 
-
-
-
-
-
-
-
-        
+        node* temp = tail;
+        if (head == tail) {
+            head = tail = NULL;
+        } else {
+            tail = tail->prev;
+            tail->next = NULL;
+        }
+        delete temp;
     }
 
     void delete_pos(int pos) {
+        if (head == NULL) return;
 
+        if (pos <= 1) {
+            delete_begin();
+            return;
+        }
 
+        node* current = head;
+        for (int index = 1; index < pos && current != NULL; index++) {
+            current = current->next;
+        }
 
+        if (current == NULL) return;
 
+        if (current == tail) {
+            delete_end();
+            return;
+        }
 
-
-
+        current->prev->next = current->next;
+        current->next->prev = current->prev;
+        delete current;
     }
 
     void display_forward() {
-
-
-
-
-
-
-
+        node* current = head;
+        while (current != NULL) {
+            cout << current->data << " ";
+            current = current->next;
+        }
+        cout << endl;
     }
 
     void display_backward() {
-
-
-
-
-
-
-
+        node* current = tail;
+        while (current != NULL) {
+            cout << current->data << " ";
+            current = current->prev;
+        }
+        cout << endl;
     }
 
     void search_value(int value) {
+        node* current = head;
+        int pos = 1;
 
+        while (current != NULL) {
+            if (current->data == value) {
+                cout << pos << endl;
+                return;
+            }
+            current = current->next;
+            pos++;
+        }
 
-
-
-
-
-
+        cout << -1 << endl;
     }
 };
 
