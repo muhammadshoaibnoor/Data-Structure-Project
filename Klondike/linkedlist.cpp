@@ -154,9 +154,15 @@ public:
 
         cout << -1 << endl;
     }
+    list& operator=(const list& other) {
+        if (this != &other) {
+            clear();
+            node* current = other.head;
+            while (current != NULL) {
+                insert_end(current->data);
+                current = current->next;
+            }
+        }
+        return *this;
+    }
 };
-
-int main() {
-    list linkedlist;
-    return 0;
-}
