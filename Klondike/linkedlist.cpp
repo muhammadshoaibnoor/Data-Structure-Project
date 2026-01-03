@@ -1,168 +1,231 @@
 #include <iostream>
 using namespace std;
 
-class node {
-public:
-    int data;
-    node* prev;
-    node* next;
-
-    node(int value) {
-        data = value;
-        prev = NULL;
-        next = NULL;
-    }
+template <class T>
+struct Node
+{
+    T data;
+    Node* next;
 };
-
-class list {
-private:
-    node* head;
-    node* tail;
+template <class T>
+class LinkedList
+{
+    Node<T>* head;
+    int count;
 
 public:
-    list() {
-        head = NULL;
-        tail = NULL;
+    LinkedList()
+    {
+        head = nullptr;
+        count = 0;
     }
 
-    void insert_begin(int value) {
-        node* newnode = new node(value);
-        if (head == NULL) {
-            head = tail = newnode;
-        } else {
-            newnode->next = head;
-            head->prev = newnode;
-            head = newnode;
-        }
+    LinkedList(int s)
+    {
+        head = nullptr;
+        count = 0;
     }
 
-    void insert_end(int value) {
-        node* newnode = new node(value);
-        if (tail == NULL) {
-            head = tail = newnode;
-        } else {
-            tail->next = newnode;
-            newnode->prev = tail;
-            tail = newnode;
-        }
-    }
-
-    void insert_pos(int value, int pos) {
-        if (pos <= 1) {
-            insert_begin(value);
+    LinkedList(const LinkedList& other)
+    {
+        head = nullptr;
+        count = 0;
+        if (other.head == nullptr)
             return;
-        }
 
-        node* current = head;
-        for (int index = 1; index < pos - 1 && current != NULL; index++) {
+        Node<T>* tempOther = other.head;
+        head = new Node<T>;
+        head->data = tempOther->data;
+        head->next = nullptr;
+        count++;
+
+        Node<T>* current = head;
+        tempOther = tempOther->next;
+
+        while (tempOther != nullptr)
+        {
+            current->next = new Node<T>;
             current = current->next;
+            current->data = tempOther->data;
+            current->next = nullptr;
+            tempOther = tempOther->next;
+            count++;
+        }
+    }
+
+    void operator=(const LinkedList& other)
+    {
+        if (this == &other)
+            return;
+
+        T dummy;
+        while (!isEmpty())
+        {
+            deleteFromHead(dummy);
         }
 
-        if (current == NULL || current->next == NULL) {
-            insert_end(value);
+        if (other.head == nullptr)
+        {
+            head = nullptr;
+            count = 0;
             return;
         }
 
-        node* newnode = new node(value);
-        newnode->next = current->next;
-        newnode->prev = current;
-        current->next->prev = newnode;
-        current->next = newnode;
+        Node<T>* tempOther = other.head;
+        head = new Node<T>;
+        head->data = tempOther->data;
+        head->next = nullptr;
+        count++;
+
+        Node<T>* current = head;
+        tempOther = tempOther->next;
+
+        while (tempOther != nullptr)
+        {
+            current->next = new Node<T>;
+            current = current->next;
+            current->data = tempOther->data;
+            current->next = nullptr;
+            tempOther = tempOther->next;
+            count++;
+        }
     }
 
-    void delete_begin() {
-        if (head == NULL) return;
+    bool insertAtHead(T n)
+    {
+        Node<T>* newNode = new Node<T>;
+        newNode->data = n;
+        newNode->next = head;
+        head = newNode;
+        count++;
+        return true;
+    }
 
-        node* temp = head;
-        if (head == tail) {
-            head = tail = NULL;
-        } else {
+    bool deleteFromHead(T& v)
+    {
+        if (!isEmpty())
+        {
+            Node<T>* temp = head;
+            v = temp->data;
             head = head->next;
-            head->prev = NULL;
+            delete temp;
+            count--;
+            return true;
         }
-        delete temp;
+        return false;
     }
 
-    void delete_end() {
-        if (tail == NULL) return;
-
-        node* temp = tail;
-        if (head == tail) {
-            head = tail = NULL;
-        } else {
-            tail = tail->prev;
-            tail->next = NULL;
+    void clear() {
+        T dummy;
+        while (!isEmpty()) {
+            deleteFromHead(dummy);
         }
-        delete temp;
     }
 
-    void delete_pos(int pos) {
-        if (head == NULL) return;
-
-        if (pos <= 1) {
-            delete_begin();
-            return;
+    T peek()
+    {
+        if (!isEmpty())
+        {
+            return head->data;
         }
-
-        node* current = head;
-        for (int index = 1; index < pos && current != NULL; index++) {
-            current = current->next;
+        else
+        {
+            return T();
         }
-
-        if (current == NULL) return;
-
-        if (current == tail) {
-            delete_end();
-            return;
-        }
-
-        current->prev->next = current->next;
-        current->next->prev = current->prev;
-        delete current;
     }
 
-    void display_forward() {
-        node* current = head;
-        while (current != NULL) {
-            cout << current->data << " ";
-            current = current->next;
-        }
-        cout << endl;
+    bool isEmpty()
+    {
+        return head == nullptr;
     }
 
-    void display_backward() {
-        node* current = tail;
-        while (current != NULL) {
-            cout << current->data << " ";
-            current = current->prev;
-        }
-        cout << endl;
-    }
+    int getCount() { return count; }
 
-    void search_value(int value) {
-        node* current = head;
-        int pos = 1;
+    Node<T>* getHead() { return head; }
 
-        while (current != NULL) {
-            if (current->data == value) {
-                cout << pos << endl;
-                return;
-            }
-            current = current->next;
-            pos++;
-        }
-
-        cout << -1 << endl;
-    }
-    list& operator=(const list& other) {
-        if (this != &other) {
-            clear();
-            node* current = other.head;
-            while (current != NULL) {
-                insert_end(current->data);
-                current = current->next;
-            }
-        }
-        return *this;
+    ~LinkedList()
+    {
+        clear();
     }
 };
+class card
+{
+public:
+    int suit;
+    int rankk;
+    string color;
+    bool faceup;
+    card() {}
+
+    ~card() {}
+};
+class Deck
+{
+public:
+    LinkedList<card> tableau1;
+    LinkedList<card> tableau2;
+    LinkedList<card> tableau3;
+    LinkedList<card> tableau4;
+    LinkedList<card> tableau5;
+    LinkedList<card> tableau6;
+    LinkedList<card> tableau7;
+    LinkedList<card> stock;
+    LinkedList<card> waste;
+    LinkedList<card> foundation1{ 13 };
+    LinkedList<card> foundation2{ 13 };
+    LinkedList<card> foundation3{ 13 };
+    LinkedList<card> foundation4{ 13 };
+    Deck() {}
+    void createdeck()
+    {
+
+    }
+    void shuffledeck()
+    {
+
+    }
+    void dealtotableau(LinkedList<card>& tableau, int j)
+    {
+
+    }
+    void dealtableau()
+    {
+
+    }
+    void drawtowastee()
+    {
+
+    }
+    void recyclewastetostock()
+    {
+
+    }
+    bool can_move_to_foundation(LinkedList<card>& foundation, card c)
+    {
+
+    }
+    bool can_move_to_tableau(LinkedList<card>& tableau, card c)
+    {
+
+    }
+    void flip_tableau_top(LinkedList<card>& tableau)
+    {
+
+    }
+    bool check_win()
+    {
+
+    }
+    bool isGameLost()
+    {
+
+    }
+    void move_tableau_to_foundation(LinkedList<card>& tableau)
+    {
+
+    }
+    void move_waste_to_foundation()
+    {
+
+    }
+};    
