@@ -185,17 +185,40 @@ public:
 
     }
     void dealtotableau(LinkedList<card>& tableau, int j)
+{
+    card c;
+    for (int i = 1; i <= j; i++)
     {
-
+        stock.deleteFromHead(c);
+        if (i == j) c.faceup = true;
+        else c.faceup = false;
+        tableau.insertAtHead(c);
     }
+}
     void dealtableau()
-    {
-
-    }
+{
+    dealtotableau(tableau1, 1);
+    dealtotableau(tableau2, 2);
+    dealtotableau(tableau3, 3);
+    dealtotableau(tableau4, 4);
+    dealtotableau(tableau5, 5);
+    dealtotableau(tableau6, 6);
+    dealtotableau(tableau7, 7);
+}
     void drawtowastee()
+{
+    card c;
+    if (stock.isEmpty())
     {
-
+        recyclewastetostock();
+        if (stock.isEmpty()) return;
     }
+    if (stock.deleteFromHead(c))
+    {
+        c.faceup = true;
+        waste.insertAtHead(c);
+    }
+}
     void recyclewastetostock()
     {
 
