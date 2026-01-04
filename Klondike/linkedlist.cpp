@@ -178,11 +178,41 @@ public:
     Deck() {}
     void createdeck()
     {
-
+        card c;
+for (int i = 0; i < 4; i++)
+{
+    for (int j = 1; j < 14; j++)
+    {
+        c.suit = i;
+        c.rankk = j;
+        c.faceup = true;
+        if (i == 0 || i == 1) c.color = "red";
+        else c.color = "black";
+        stock.insertAtHead(c);
+    }
+}
     }
     void shuffledeck()
     {
-
+        srand(time(0));
+card temp[52];
+int index = 0;
+while (!stock.isEmpty() && index < 52)
+{
+    stock.deleteFromHead(temp[index]);
+    index++;
+}
+for (int i = 0; i < 52; i++)
+{
+    int j = rand() % 52;
+    card tempa = temp[i];
+    temp[i] = temp[j];
+    temp[j] = tempa;
+}
+for (int i = 0; i < 52; i++)
+{
+    stock.insertAtHead(temp[i]);
+}
     }
     void dealtotableau(LinkedList<card>& tableau, int j)
 {
