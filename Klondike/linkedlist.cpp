@@ -285,18 +285,44 @@ bool can_move_to_tableau(LinkedList<card>& tableau, card c)
     }
     bool check_win()
     {
-
+        return (foundation1.getCount() == 13 && foundation2.getCount() == 13 &&
+    foundation3.getCount() == 13 && foundation4.getCount() == 13);
     }
     bool isGameLost()
     {
-
+        return stock.isEmpty() && waste.isEmpty() && !hasLegalMoves() && !check_win();
     }
     void move_tableau_to_foundation(LinkedList<card>& tableau)
     {
+        if (tableau.isEmpty()) return;
+card c = tableau.peek();
+LinkedList<card>* foundation = nullptr;
+if (c.suit == 0) foundation = &foundation1;
+else if (c.suit == 1) foundation = &foundation2;
+else if (c.suit == 2) foundation = &foundation3;
+else if (c.suit == 3) foundation = &foundation4;
 
+if (foundation && can_move_to_foundation(*foundation, c))
+{
+    tableau.deleteFromHead(c);
+    foundation->insertAtHead(c);
+    flip_tableau_top(tableau);
+}
     }
     void move_waste_to_foundation()
     {
+        if (waste.isEmpty()) return;
+card c = waste.peek();
+LinkedList<card>* foundation = nullptr;
+if (c.suit == 0) foundation = &foundation1;
+else if (c.suit == 1) foundation = &foundation2;
+else if (c.suit == 2) foundation = &foundation3;
+else if (c.suit == 3) foundation = &foundation4;
 
+if (foundation && can_move_to_foundation(*foundation, c))
+{
+    waste.deleteFromHead(c);
+    foundation->insertAtHead(c);
+}
     }
 };    
