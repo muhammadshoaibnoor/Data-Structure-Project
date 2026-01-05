@@ -250,13 +250,36 @@ for (int i = 0; i < 52; i++)
     }
 }
     void recyclewastetostock()
+{
+    if (waste.isEmpty()) return;
+    card c;
+    LinkedList<card> temp;
+    while (!waste.isEmpty())
     {
-
+        waste.deleteFromHead(c);
+        c.faceup = false;
+        temp.insertAtHead(c);
     }
-    bool can_move_to_foundation(LinkedList<card>& foundation, card c)
+    while (!temp.isEmpty())
     {
-
+        temp.deleteFromHead(c);
+        stock.insertAtHead(c);
     }
+}
+bool can_move_to_foundation(LinkedList<card>& foundation, card c)
+{
+    if (foundation.isEmpty()) return c.rankk == 1;
+    card top = foundation.peek();
+    return (top.suit == c.suit && c.rankk == top.rankk + 1);
+}
+
+bool can_move_to_tableau(LinkedList<card>& tableau, card c)
+{
+    if (tableau.isEmpty()) return c.rankk == 13;
+    card top = tableau.peek();
+    return (c.rankk == top.rankk - 1 && c.color != top.color);
+}
+
     bool can_move_to_tableau(LinkedList<card>& tableau, card c)
     {
 
