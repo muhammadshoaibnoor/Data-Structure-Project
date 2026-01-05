@@ -280,9 +280,18 @@ bool can_move_to_tableau(LinkedList<card>& tableau, card c)
     return (c.rankk == top.rankk - 1 && c.color != top.color);
 }
     void flip_tableau_top(LinkedList<card>& tableau)
+{
+    if (!tableau.isEmpty())
     {
-
-    }
+        card top = tableau.peek();
+        if (!top.faceup)
+        {
+            tableau.deleteFromHead(top);
+            top.faceup = true;
+            tableau.insertAtHead(top);
+        }
+    }
+}
     bool check_win()
     {
         return (foundation1.getCount() == 13 && foundation2.getCount() == 13 &&
