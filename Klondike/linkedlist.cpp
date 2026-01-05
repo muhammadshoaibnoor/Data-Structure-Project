@@ -279,11 +279,6 @@ bool can_move_to_tableau(LinkedList<card>& tableau, card c)
     card top = tableau.peek();
     return (c.rankk == top.rankk - 1 && c.color != top.color);
 }
-
-    bool can_move_to_tableau(LinkedList<card>& tableau, card c)
-    {
-
-    }
     void flip_tableau_top(LinkedList<card>& tableau)
     {
 
