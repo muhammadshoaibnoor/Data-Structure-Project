@@ -434,3 +434,92 @@ public:
         scaledTableauOffset = 25 * scaleY;
         loadSettings();
     }
+void loadSettings() {
+    ifstream file("settings.txt");
+    if (file.is_open()) {
+        file >> musicOn >> soundsOn;
+        file.close();
+    }
+}
+
+void saveSettings() {
+    ofstream file("settings.txt");
+    if (file.is_open()) {
+        file << musicOn << " " << soundsOn;
+        file.close();
+    }
+}
+
+void saveStateForUndo() {
+    DeckState ds;
+    ds.stock = game.stock; ds.waste = game.waste;
+    ds.t1 = game.tableau1; ds.t2 = game.tableau2; ds.t3 = game.tableau3;
+    ds.t4 = game.tableau4; ds.t5 = game.tableau5; ds.t6 = game.tableau6; ds.t7 = game.tableau7;
+    ds.f1 = game.foundation1; ds.f2 = game.foundation2; ds.f3 = game.foundation3; ds.f4 = game.foundation4;
+    ds.moves = moveCount; ds.hints = remainingHints; ds.time = remainingSeconds;
+    undoStack.insertAtHead(ds);
+    if (undoStack.getCount() > 4) {
+        DeckState dummy;
+        undoStack.deleteFromTail(dummy);
+    }
+}
+
+void performUndo() {
+    if (undoStack.isEmpty()) return;
+    DeckState ds;
+    undoStack.deleteFromHead(ds);
+    game.stock = ds.stock; game.waste = ds.waste;
+    game.tableau1 = ds.t1; game.tableau2 = ds.t2; game.tableau3 = ds.t3;
+    game.tableau4 = ds.t4; game.tableau5 = ds.t5; game.tableau6 = ds.t6; game.tableau7 = ds.t7;
+    game.foundation1 = ds.f1; game.foundation2 = ds.f2; game.foundation3 = ds.f3; game.foundation4 = ds.f4;
+    moveCount = ds.moves; remainingHints = ds.hints; remainingSeconds = ds.time;
+    if (soundsOn) PlaySound(click);
+}
+
+void loadAssets()
+{
+    Image bgImg = FileExists("bg.png") ? LoadImage("bg.png") : GenImageColor(screenWidth, screenHeight, DARKGREEN);
+    ImageResize(&bgImg, screenWidth, screenHeight);
+    background = LoadTextureFromImage(bgImg); UnloadImage(bgImg);
+
+    Image backImg = FileExists("back.png") ? LoadImage("back.png") : GenImageColor(BASE_CARD_WIDTH, BASE_CARD_HEIGHT, BLUE);
+    ImageResize(&backImg, (int)scaledCardWidth, (int)scaledCardHeight);
+    cardBack = LoadTextureFromImage(backImg); UnloadImage(backImg);
+
+    for (int i = 1; i <= 52; i++) {
+        string fn = to_string(i) + ".png";
+        Image cImg = FileExists(fn.c_str()) ? LoadImage(fn.c_str()) : GenImageColor(BASE_CARD_WIDTH, BASE_CARD_HEIGHT, WHITE);
+        ImageResize(&cImg, (int)scaledCardWidth, (int)scaledCardHeight);
+        cardTextures[i] = LoadTextureFromImage(cImg); UnloadImage(cImg);
+    }
+    InitAudioDevice();
+    cardFlip = LoadSound("card_flip.wav");
+    cardPlace = LoadSound("card_place.wav");
+    cardSlide = LoadSound("card_slide.wav");
+    click = LoadSound("click.wav");
+    hintSnd = LoadSound("hint.wav");
+    winSnd = LoadSound("win.wav");
+    lossSnd = LoadSound("lose.wav");
+    bgm = LoadMusicStream("background_music.mp3");
+    if (musicOn) PlayMusicStream(bgm);
+    SetMusicVolume(bgm, 0.4f);
+}
+
+void unloadAssets()
+{
+    UnloadTexture(background); UnloadTexture(cardBack);
+    for (int i = 1; i <= 52; i++) UnloadTexture(cardTextures[i]);
+    UnloadSound(cardFlip); UnloadSound(cardPlace); UnloadSound(cardSlide);
+    UnloadSound(click); UnloadSound(hintSnd); UnloadSound(winSnd); UnloadSound(lossSnd);
+    UnloadMusicStream(bgm); CloseAudioDevice();
+}
+
+void serializePile(ofstream& file, string label, LinkedList<card>& pile) {
+    file << label << " " << pile.getCount() << "\n";
+    Node<card>* curr = pile.getHead();
+    while (curr) {
+        file << curr->data.suit << " " << curr->data.rankk << " "
+            << curr->data.color << " " << curr->data.faceup << "\n";
+        curr = curr->next;
+    }
+}
