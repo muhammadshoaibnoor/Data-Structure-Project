@@ -318,3 +318,69 @@ bool hasLegalMoves()
 }
 
 };    
+struct DeckState {
+    LinkedList<card> stock, waste;
+    LinkedList<card> t1, t2, t3, t4, t5, t6, t7;
+    LinkedList<card> f1, f2, f3, f4;
+    int moves, hints;
+    float time;
+};
+
+struct Hint {
+    int srcType, srcIdx, destType, destIdx;
+};
+
+class Game
+{
+public:
+    const int ORIGINAL_WIDTH = 800;
+    const int ORIGINAL_HEIGHT = 600;
+    int screenWidth = 1000;
+    int screenHeight = 700;
+    float scaleX, scaleY, minScale;
+
+    const int BASE_CARD_WIDTH = 71;
+    const int BASE_CARD_HEIGHT = 96;
+    float scaledCardWidth, scaledCardHeight;
+    float scaledCardSpacing, scaledTableauOffset;
+
+    Deck game;
+    Texture2D cardTextures[53];
+    Texture2D cardBack, background;
+    Sound cardFlip, cardPlace, cardSlide, click, hintSnd, winSnd, lossSnd;
+    Music bgm;
+
+    bool isDragging = false;
+    LinkedList<card> draggedCards;
+    Vector2 dragOffset;
+    int sourcePileType = -1, sourcePileIndex = -1;
+
+    enum GameState { MAIN_MENU, DIFF_SELECT, INSTRUCTIONS, PLAYING, WON, LOST, SETTINGS };
+    GameState state = MAIN_MENU;
+    int remainingHints = 0, hintsPerUse = 0;
+    string difficultyStr = "";
+
+    int moveCount = 0;
+    int bestMoveCount = -1;
+
+    LinkedList<Hint> activeHints;
+    float hintTimer = 0.0f;
+
+    float remainingSeconds = 0.0f;
+    bool timeExpired = false;
+
+    LinkedList<DeckState> undoStack;
+    bool musicOn = true;
+    bool soundsOn = true;
+
+    Game() {
+        scaleX = (float)screenWidth / ORIGINAL_WIDTH;
+        scaleY = (float)screenHeight / ORIGINAL_HEIGHT;
+        minScale = (scaleX < scaleY) ? scaleX : scaleY;
+
+        scaledCardWidth = BASE_CARD_WIDTH * scaleX;
+        scaledCardHeight = BASE_CARD_HEIGHT * scaleY;
+        scaledCardSpacing = 100 * scaleX;
+        scaledTableauOffset = 25 * scaleY;
+        loadSettings();
+    }
