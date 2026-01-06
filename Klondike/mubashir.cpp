@@ -759,3 +759,833 @@ public:
 		cout<<"Cards Flipped: "<<card_flip<<endl;
 }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+class SolitaireGame
+{
+public:
+	DeckOfCards gameDeck;
+	Queue<CardItem> stock_pile;
+	Queue<CardItem> waste_pile;
+	Queue<CardItem> foundation_piles[4];
+	TableauColumn tab_col[7];
+	GameRules rules;
+	GameStatistics stat;
+	int score;
+	int m_count;
+	bool game_won;
+	bool game_start;
+
+	SolitaireGame() : stock_pile(24),waste_pile(24)
+{
+		for(int i=0;i<4;i++)
+{
+			foundation_piles[i]=Queue<CardItem>(13);
+}
+		score=0;
+		m_count=0;
+		game_won=false;
+		game_start=false;
+}
+
+	void set_game()
+{
+		gameDeck.full_deck();
+		deal_tab_card();
+		while (!gameDeck.check_empty())
+{
+			CardItem card_fdeck=gameDeck.draw_card();
+			stock_pile.enqueue(card_fdeck);
+}
+		game_start=true;
+		game_won=false;
+}
+
+	void deal_tab_card()
+{
+		for (int col_no=0;col_no<7;col_no++)
+{
+			for (int card_no=0;card_no<=col_no;card_no++)
+{
+				CardItem drawn_card=gameDeck.draw_card();
+				if (card_no==col_no)
+{
+					drawn_card.is_faceup=true;
+}
+				tab_col[col_no].add_card(drawn_card);
+}
+}
+}
+
+	void draw_card_fstock()
+{
+		if (!stock_pile.emptyy())
+{
+			CardItem drawn_card=stock_pile.dequeue();
+			drawn_card.is_faceup=true;
+			waste_pile.enqueue(drawn_card);
+			m_count=m_count+1;
+			stat.inc_moves();
+			stat.inc_sdraws();
+			cout<<endl<<"Drew: "<<drawn_card.card_detail()<<endl;
+}
+		else if (!waste_pile.emptyy())
+{
+			recycle_waste_tostock();
+}
+		else
+{
+			cout<<endl<<"Stock pile is completely empty"<<endl;
+}
+}
+
+	void recycle_waste_tostock()
+{
+		int c=0;
+		while (!waste_pile.emptyy())
+{
+			CardItem recycle_card=waste_pile.dequeue();
+			recycle_card.is_faceup=false;
+			stock_pile.enqueue(recycle_card);
+			c=c+1;
+}
+		m_count=m_count+1;
+		stat.inc_moves();
+		stat.inc_wrecycle();
+		cout<<endl<<"Recycled "<<c<<" cards from waste back to stock"<<endl;
+}
+
+	bool tab_to_tab(int fcol,int tocol)
+{
+		if (fcol<0 || fcol>=7)
+{
+			cout<<endl<<"Invalid source column number"<<endl;
+			return false;
+}
+		if (tocol<0 || tocol>=7)
+{
+			cout<<endl<<"Invalid destination column number"<<endl;
+			return false;
+}
+		if (fcol==tocol)
+{
+			cout<<endl<<"Cannot move to same column"<<endl;
+			return false;
+}
+
+		TableauColumn* src=&tab_col[fcol];
+		TableauColumn* dst=&tab_col[tocol];
+
+		if (src->empty())
+{
+			cout<<endl<<"Source column is empty"<<endl;
+			return false;
+}
+
+		int src_faceup_count=0;
+		CardItem src_top=src->get_top_card(src_faceup_count);
+
+		if (src_faceup_count==0)
+{
+			cout<<endl<<"No face-up cards in source column"<<endl;
+			return false;
+}
+
+		if (dst->empty())
+{
+			if (rules.empty_placement(src_top,true))
+{
+				src->move_faceup_cards_to(*dst);
+				src->flip_topp();
+				m_count=m_count+1;
+				score=score+5;
+				stat.inc_moves();
+				stat.inc_tabmove();
+				cout<<endl<<"Moved cards to empty column"<<endl;
+				return true;
+}
+			else
+{
+				cout<<endl<<"Only Kings can be placed on empty columns"<<endl;
+				return false;
+}
+}
+		else
+{
+			int dst_faceup_count=0;
+			CardItem dst_top=dst->get_top_card(dst_faceup_count);
+
+			if (rules.tab_move(src_top,dst_top))
+{
+				src->move_faceup_cards_to(*dst);
+				src->flip_topp();
+				m_count=m_count+1;
+				score=score+5;
+				stat.inc_moves();
+				stat.inc_tabmove();
+				cout<<endl<<"Moved cards successfully"<<endl;
+				return true;
+}
+			else
+{
+				string r=rules.invalid_mover(src_top,dst_top,true);
+				cout<<endl<<"Invalid move: "<<r<<endl;
+				return false;
+}
+}
+}
+
+	bool tab_to_foundation(int n)
+{
+		if (n<0 || n>=7)
+{
+			cout<<endl<<"Invalid column number"<<endl;
+			return false;
+}
+
+		TableauColumn* col=&tab_col[n];
+
+		if (col->empty())
+{
+			cout<<endl<<"Column is empty"<<endl;
+			return false;
+}
+
+		int faceup_count=0;
+		CardItem top_card=col->get_top_card(faceup_count);
+
+		if (faceup_count==0)
+{
+			cout<<endl<<"Top card is face down"<<endl;
+			return false;
+}
+
+		int foundation_i=-1;
+		if (top_card.suit=='H') foundation_i=0;
+		if (top_card.suit=='D') foundation_i=1;
+		if (top_card.suit=='S') foundation_i=2;
+		if (top_card.suit=='C') foundation_i=3;
+
+		if (foundation_i==-1)
+{
+			cout<<endl<<"Invalid card suit"<<endl;
+			return false;
+}
+
+		bool cp=false;
+		if (foundation_piles[foundation_i].emptyy())
+{
+			if (rules.empty_placement(top_card,false))
+{
+				cp=true;
+}
+			else
+{
+				cout<<endl<<"Foundation must start with Ace"<<endl;
+				return false;
+}
+}
+		else
+{
+			Queue<CardItem> temp(52);
+			CardItem foundation_top;
+			while (!foundation_piles[foundation_i].emptyy())
+{
+				foundation_top=foundation_piles[foundation_i].dequeue();
+				temp.enqueue(foundation_top);
+}
+			while (!temp.emptyy())
+{
+				foundation_piles[foundation_i].enqueue(temp.dequeue());
+}
+
+			if (rules.foundation_move(top_card,foundation_top))
+{
+				cp=true;
+}
+			else
+{
+				string a=rules.invalid_mover(top_card,foundation_top,false);
+				cout<<endl<<"Invalid move: "<<a<<endl;
+				return false;
+}
+}
+
+		if (cp)
+{
+			CardItem removed_card=col->remove_lastcard();
+			foundation_piles[foundation_i].enqueue(removed_card);
+			col->flip_topp();
+			m_count=m_count+1;
+			score=score+10;
+			stat.inc_moves();
+			stat.inc_foundation();
+			cout<<endl<<"Moved "<<top_card.card_detail()<<" to foundation"<<endl;
+			return true;
+}
+		return false;
+}
+
+	bool waste_to_tab(int n)
+{
+		if (waste_pile.emptyy())
+{
+			cout<<endl<<"Waste pile is empty"<<endl;
+			return false;
+}
+
+		if (n<0 || n>=7)
+{
+			cout<<endl<<"Invalid column number"<<endl;
+			return false;
+}
+
+		Queue<CardItem> temp(52);
+		CardItem waste_card;
+		while (!waste_pile.emptyy())
+{
+			waste_card=waste_pile.dequeue();
+			if (!waste_pile.emptyy())
+{
+				temp.enqueue(waste_card);
+}
+}
+
+		while (!temp.emptyy())
+{
+			waste_pile.enqueue(temp.dequeue());
+}
+
+		TableauColumn* des_col=&tab_col[n];
+
+		if (des_col->empty())
+{
+			if (rules.empty_placement(waste_card,true))
+{
+				des_col->add_card(waste_card);
+				m_count=m_count+1;
+				score=score+5;
+				stat.inc_moves();
+				stat.inc_tabmove();
+				cout<<endl<<"Moved "<<waste_card.card_detail()<<" to column"<<endl;
+				return true;
+}
+			else
+{
+				waste_pile.enqueue(waste_card);
+				cout<<endl<<"Only Kings can be placed on empty columns"<<endl;
+				return false;
+}
+}
+		else
+{
+			int dst_faceup_count=0;
+			CardItem dst_top=des_col->get_top_card(dst_faceup_count);
+
+			if (rules.tab_move(waste_card,dst_top))
+{
+				des_col->add_card(waste_card);
+				m_count=m_count+1;
+				score=score+5;
+				stat.inc_moves();
+				stat.inc_tabmove();
+				cout<<endl<<"Moved "<<waste_card.card_detail()<<" to column"<<endl;
+				return true;
+}
+			else
+{
+				waste_pile.enqueue(waste_card);
+				string e=rules.invalid_mover(waste_card,dst_top,true);
+				cout<<endl<<"Invalid move: "<<e<<endl;
+				return false;
+}
+}
+}
+
+	bool waste_to_foundation()
+{
+		if (waste_pile.emptyy())
+{
+			cout<<endl<<"Waste pile is empty"<<endl;
+			return false;
+}
+
+		Queue<CardItem> temp(52);
+		CardItem waste_card;
+		while (!waste_pile.emptyy())
+{
+			waste_card=waste_pile.dequeue();
+			if (!waste_pile.emptyy())
+{
+				temp.enqueue(waste_card);
+}
+}
+
+		while (!temp.emptyy())
+{
+			waste_pile.enqueue(temp.dequeue());
+}
+
+		int foundation_i=-1;
+		if (waste_card.suit=='H') foundation_i=0;
+		if (waste_card.suit=='D') foundation_i=1;
+		if (waste_card.suit=='S') foundation_i=2;
+		if (waste_card.suit=='C') foundation_i=3;
+
+		if (foundation_i==-1)
+{
+			waste_pile.enqueue(waste_card);
+			cout<<endl<<"Invalid card suit"<<endl;
+			return false;
+}
+
+		bool p=false;
+		if (foundation_piles[foundation_i].emptyy())
+{
+			if (rules.empty_placement(waste_card,false))
+{
+				p=true;
+}
+			else
+{
+				waste_pile.enqueue(waste_card);
+				cout<<endl<<"Foundation must start with Ace"<<endl;
+				return false;
+}
+}
+		else
+{
+			Queue<CardItem> temp2(52);
+			CardItem foundation_top;
+			while (!foundation_piles[foundation_i].emptyy())
+{
+				foundation_top=foundation_piles[foundation_i].dequeue();
+				temp2.enqueue(foundation_top);
+}
+			while (!temp2.emptyy())
+{
+				foundation_piles[foundation_i].enqueue(temp2.dequeue());
+}
+
+			if (rules.foundation_move(waste_card,foundation_top))
+{
+				p=true;
+}
+			else
+{
+				waste_pile.enqueue(waste_card);
+				string r=rules.invalid_mover(waste_card,foundation_top,false);
+				cout<<endl<<"Invalid move: "<<r<<endl;
+				return false;
+}
+}
+
+		if (p)
+{
+			foundation_piles[foundation_i].enqueue(waste_card);
+			m_count=m_count+1;
+			score=score+10;
+			stat.inc_moves();
+			stat.inc_foundation();
+			cout<<endl<<"Moved "<<waste_card.card_detail()<<" to foundation"<<endl;
+			return true;
+}
+		return false;
+}
+
+	bool check_win()
+{
+		bool c=rules.check_foundation(foundation_piles);
+		if (c==true)
+{
+			game_won=true;
+}
+		return game_won;
+}
+
+	int percent()
+{
+		int card_foundation=0;
+		for (int i=0;i<4;i++)
+{
+			card_foundation=card_foundation+foundation_piles[i].gsize();
+}
+		int p=(card_foundation*100)/52;
+		return p;
+}
+
+	void game_board()
+{
+		system("clear");
+		cout<<endl;
+		cout<<"================================================================================="<<endl;
+		cout<<"                          KLONDIKE SOLITAIRE\n";
+		cout<<"================================================================================="<<endl;
+		cout<<endl;
+		cout<<"  Score: "<<setw(6)<<right<<score;
+		cout<<"     Moves: "<<setw(6)<<right<<m_count;
+		cout<<"     Completion: "<<setw(3)<<right<<percent()<<"%"<<endl;
+		cout<<endl;
+		cout<<"================================================================================="<<endl;
+
+		cout<<"  STOCK                WASTE              FOUNDATIONS"<<endl;
+		cout<<"  -----                -----              -----------"<<endl;
+		cout<<"  ";
+
+		cout<<"+----------+";
+		cout<<"     ";
+
+		cout<<"+----------+";
+		cout<<"     ";
+
+		cout<<"  H     D     S     C"<<endl;
+		cout<<"  ";
+
+		if (!stock_pile.emptyy())
+{
+			cout<<"|";
+			cout<<setw(8)<<left<<(to_string(stock_pile.gsize())+" cards");
+			cout<<"|";
+}
+		else
+{
+			cout<<"|";
+			cout<<setw(8)<<left<<" EMPTY";
+			cout<<"|";
+}
+		cout<<"     ";
+
+		if (!waste_pile.emptyy())
+{
+			Queue<CardItem> temp(52);
+			CardItem wc;
+			while (!waste_pile.emptyy())
+{
+				wc=waste_pile.dequeue();
+				temp.enqueue(wc);
+}
+			while (!temp.emptyy())
+{
+				waste_pile.enqueue(temp.dequeue());
+}
+			cout<<"|";
+			cout<<setw(8)<<left<<(wc.rank_show()+wc.suit_name());
+			cout<<"|";
+}
+		else
+{
+			cout<<"|";
+			cout<<setw(8)<<left<<" EMPTY";
+			cout<<"|";
+}
+		cout<<"     ";
+
+		for (int f=0;f<4;f++)
+{
+			if (!foundation_piles[f].emptyy())
+{
+				Queue<CardItem> temp(52);
+				CardItem fc;
+				while (!foundation_piles[f].emptyy())
+{
+					fc=foundation_piles[f].dequeue();
+					temp.enqueue(fc);
+}
+				while (!temp.emptyy())
+{
+					foundation_piles[f].enqueue(temp.dequeue());
+}
+				cout<<"[";
+				cout<<setw(3)<<left<<fc.rank_show();
+				cout<<"]";
+}
+			else
+{
+				cout<<"[";
+				cout<<setw(3)<<left<<" -";
+				cout<<"]";
+}
+			if (f<3) cout<<"   ";
+}
+		cout<<endl;
+		cout<<"  +----------+";
+		cout<<"     ";
+		cout<<"+----------+";
+		cout<<"     ";
+
+		for (int f=0;f<4;f++)
+{
+			if (!foundation_piles[f].emptyy())
+{
+				Queue<CardItem> temp(52);
+				CardItem fc;
+				while (!foundation_piles[f].emptyy())
+{
+					fc=foundation_piles[f].dequeue();
+					temp.enqueue(fc);
+}
+				while (!temp.emptyy())
+{
+					foundation_piles[f].enqueue(temp.dequeue());
+}
+				cout<<"[";
+				cout<<setw(3)<<left<<fc.suit_name()[0];
+				cout<<"]";
+}
+			else
+{
+				cout<<"[";
+				cout<<setw(3)<<left<<" ";
+				cout<<"]";
+}
+			if (f<3) cout<<"   ";
+}
+		cout<<endl;
+
+		cout<<"   Count: ";
+		cout<<setw(2)<<right<<stock_pile.gsize();
+		cout<<"       Count: ";
+		cout<<setw(2)<<right<<waste_pile.gsize();
+		cout<<"       Counts: ";
+
+		for (int g=0;g<4;g++)
+{
+			cout<<setw(2)<<right<<foundation_piles[g].gsize();
+			if (g<3) cout<<" ";
+}
+		cout<<endl;
+
+		cout<<"================================================================================="<<endl;
+		cout<<"  TABLEAU COLUMNS "<<endl;
+		cout<<"  ";
+		for (int c=0;c<7;c++)
+{
+			cout<<"--------";
+}
+		cout<<endl;
+		cout<<"  ";
+		for (int c=0;c<7;c++)
+{
+			int totcard=tab_col[c].card_count();
+			int fd=tab_col[c].count_fdcard();
+			cout<<"  (";
+			if (totcard<10) cout<<" ";
+			cout<<totcard<<":";
+			cout<<fd<<"D)";
+			cout<<"   ";
+}
+		cout<<endl<<endl;
+
+		int mhei=0;
+		for (int i=0;i<7;i++)
+{
+			if (tab_col[i].card_count()>mhei)
+{
+				mhei=tab_col[i].card_count();
+}
+}
+
+		for (int row=0;row<mhei;row++)
+{
+			cout<<"  ";
+			for (int col=0;col<7;col++)
+{
+				tab_col[col].display_column(mhei);
+				cout<<"   "<<endl;
+}
+			cout<<endl;
+			break;
+}
+
+		cout<<"================================================================================="<<endl;
+
+}
+
+	void detail_state()
+{
+		cout<<endl<<"========== DETAILED GAME STATE =========="<<endl;
+		cout<<"Stock: "<<stock_pile.gsize()<<" cards"<<endl;
+		cout<<"Waste: "<<waste_pile.gsize()<<" cards"<<endl;
+		cout<<"Foundations: "<<endl;
+		string suitn[4]={"Hearts","Diamonds","Spades","Clubs"};
+		for (int i=0;i<4;i++)
+{
+			cout<<" "<<suitn[i]<<": "<<foundation_piles[i].gsize()<<" cards"<<endl;
+}
+		cout<<endl<<"Tableau Columns: "<<endl;
+		for (int col=0;col<7;col++)
+{
+			cout<<" Column "<<(col+1)<<": "<<tab_col[col].card_count()<<" cards"<<endl;
+			cout<<" ("<<tab_col[col].count_fdcard()<<" face-down, "<<endl;
+			cout<<tab_col[col].count_fucard()<<" face-up)"<<endl;
+}
+		cout<<"========================================="<<endl;
+}
+};
+
+
+
+void display_help()
+{
+	cout<<endl<<"================================================================"<<endl;
+	cout<<" Game commands"<<endl;
+	cout<<" D - Draw card from stock"<<endl;
+	cout<<" WT <col> - Move waste to tableau col"<<endl;
+	cout<<" WF - Move waste to foundation"<<endl;
+	cout<<" TF <col> Mo ve tableau column to foundation "<<endl;
+	cout<<" TT <from> <to>  Move face-up cards  tableau to tableau"<<endl;
+	cout<<" S  Show detailed game state "<<endl;
+	cout<<" ST Show statistics "<<endl;
+	cout<<" R  Restart new game"<<endl;
+	cout<<" H  Show help "<<endl;
+	cout<<" Q  Quit game"<<endl;
+	cout<<"================================================================"<<endl;
+
+}
+
+void display_gameover(SolitaireGame game)
+{
+	cout<<endl<<"================================================================"<<endl;
+	cout<<" GAME OVER"<<endl;
+	if (game.game_won)
+{
+		cout<<endl<<"YOU WON"<<endl;
+}
+	else
+{
+		cout<<endl<<" GAME ENDED ";
+}
+	cout<<endl<<"================================================================"<<endl;
+	cout<<" FINAL RESULTS "<<endl;
+	cout<<"================================================================"<<endl;
+	cout<<" Final Score: "<<game.score<<" points\n";
+	cout<<" Total Moves: "<<game.m_count<<" moves\n";
+	cout<<" Completion: "<<game.percent()<<"%"<<endl;
+	cout<<"================================================================"<<endl;
+	game.stat.show_stat();
+}
+
+int main()
+{
+	SolitaireGame game;
+	game.set_game();
+
+	string u;
+	bool k=true;
+
+	while (k)
+{
+		game.game_board();
+		if (game.check_win())
+{
+			display_gameover(game);
+			break;
+}
+
+		cout<<"Enter command (H for help): ";
+		cin>>u;
+
+		for (int i=0;i<u.length();i++)
+{
+			u[i]=toupper(u[i]);
+}
+
+		if (u=="Q")
+{
+			display_gameover(game);
+			k=false;
+}
+		else if (u=="H")
+{
+			display_help();
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+		else if (u=="D")
+{
+			game.draw_card_fstock();
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+		else if (u=="S")
+{
+			game.detail_state();
+			cout<<"ENTER to continue";
+			cin.ignore();
+			cin.get();
+}
+		else if (u=="ST")
+{
+			game.stat.show_stat();
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+		else if (u=="R")
+{
+			game=SolitaireGame();
+			game.set_game();
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+		else if (u=="WT")
+{
+			int c;
+			cin>>c;
+			game.waste_to_tab(c-1);
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+		else if (u=="WF")
+{
+			game.waste_to_foundation();
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+		else if (u=="TF")
+{
+			int c;
+			cin>>c;
+			game.tab_to_foundation(c-1);
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+		else if (u=="TT")
+{
+			int fcol,tocol;
+			cin>>fcol>>tocol;
+			game.tab_to_tab(fcol-1,tocol-1);
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+		else
+{
+			cout<<endl<<"invalid type H"<<endl;
+			cout<<"enter continue";
+			cin.ignore();
+			cin.get();
+}
+}
+
+	return 0;
+}
+
+
