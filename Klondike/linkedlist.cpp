@@ -284,4 +284,37 @@ if (foundation && can_move_to_foundation(*foundation, c))
     foundation->insertAtHead(c);
 }
     }
+bool hasLegalMoves()
+{
+    LinkedList<card>* tableaus[] = { &tableau1, &tableau2, &tableau3, &tableau4, &tableau5, &tableau6, &tableau7 };
+    LinkedList<card>* foundations[] = { &foundation1, &foundation2, &foundation3, &foundation4 };
+
+    if (!waste.isEmpty())
+    {
+        card w = waste.peek();
+        for (int i = 0; i < 4; i++) if (can_move_to_foundation(*foundations[i], w)) return true;
+        for (int i = 0; i < 7; i++) if (can_move_to_tableau(*tableaus[i], w)) return true;
+    }
+
+    for (int i = 0; i < 7; i++)
+    {
+        if (tableaus[i]->isEmpty()) continue;
+        Node<card>* curr = tableaus[i]->getHead();
+        while (curr && curr->data.faceup)
+        {
+            card sequenceLead = curr->data;
+            if (curr == tableaus[i]->getHead()) {
+                for (int f = 0; f < 4; f++) if (can_move_to_foundation(*foundations[f], sequenceLead)) return true;
+            }
+            for (int j = 0; j < 7; j++)
+            {
+                if (i == j) continue;
+                if (can_move_to_tableau(*tableaus[j], sequenceLead)) return true;
+            }
+            curr = curr->next;
+        }
+    }
+    return false;
+}
+
 };    
