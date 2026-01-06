@@ -215,33 +215,83 @@ for (int i = 0; i < 52; i++)
 }
     }
     void dealtotableau(LinkedList<card>& tableau, int j)
+{
+    card c;
+    for (int i = 1; i <= j; i++)
     {
-
+        stock.deleteFromHead(c);
+        if (i == j) c.faceup = true;
+        else c.faceup = false;
+        tableau.insertAtHead(c);
     }
+}
     void dealtableau()
-    {
-
-    }
+{
+    dealtotableau(tableau1, 1);
+    dealtotableau(tableau2, 2);
+    dealtotableau(tableau3, 3);
+    dealtotableau(tableau4, 4);
+    dealtotableau(tableau5, 5);
+    dealtotableau(tableau6, 6);
+    dealtotableau(tableau7, 7);
+}
     void drawtowastee()
+{
+    card c;
+    if (stock.isEmpty())
     {
-
+        recyclewastetostock();
+        if (stock.isEmpty()) return;
     }
+    if (stock.deleteFromHead(c))
+    {
+        c.faceup = true;
+        waste.insertAtHead(c);
+    }
+}
     void recyclewastetostock()
+{
+    if (waste.isEmpty()) return;
+    card c;
+    LinkedList<card> temp;
+    while (!waste.isEmpty())
     {
-
+        waste.deleteFromHead(c);
+        c.faceup = false;
+        temp.insertAtHead(c);
     }
-    bool can_move_to_foundation(LinkedList<card>& foundation, card c)
+    while (!temp.isEmpty())
     {
-
+        temp.deleteFromHead(c);
+        stock.insertAtHead(c);
     }
-    bool can_move_to_tableau(LinkedList<card>& tableau, card c)
-    {
+}
+bool can_move_to_foundation(LinkedList<card>& foundation, card c)
+{
+    if (foundation.isEmpty()) return c.rankk == 1;
+    card top = foundation.peek();
+    return (top.suit == c.suit && c.rankk == top.rankk + 1);
+}
 
-    }
+bool can_move_to_tableau(LinkedList<card>& tableau, card c)
+{
+    if (tableau.isEmpty()) return c.rankk == 13;
+    card top = tableau.peek();
+    return (c.rankk == top.rankk - 1 && c.color != top.color);
+}
     void flip_tableau_top(LinkedList<card>& tableau)
+{
+    if (!tableau.isEmpty())
     {
-
-    }
+        card top = tableau.peek();
+        if (!top.faceup)
+        {
+            tableau.deleteFromHead(top);
+            top.faceup = true;
+            tableau.insertAtHead(top);
+        }
+    }
+}
     bool check_win()
     {
         return (foundation1.getCount() == 13 && foundation2.getCount() == 13 &&
