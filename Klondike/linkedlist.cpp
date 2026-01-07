@@ -623,6 +623,74 @@ void setDifficulty(string diff) {
     undoStack.clear();
     state = PLAYING;
 }
+void provideHint() {
+    if (remainingHints <= 0 || isHintAnimating) return;
+
+    Hint possible[100];
+    int possibleCount = 0;
+    LinkedList<card>* t[] = { &game.tableau1, &game.tableau2, &game.tableau3, &game.tableau4, &game.tableau5, &game.tableau6, &game.tableau7 };
+    LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
+
+    if (!game.waste.isEmpty()) {
+        card w = game.waste.peek();
+        for (int i = 0; i < 4; i++) if (game.can_move_to_foundation(*f[i], w)) possible[possibleCount++] = { 0, 0, 2, i, 1 };
+        for (int i = 0; i < 7; i++) if (game.can_move_to_tableau(*t[i], w)) possible[possibleCount++] = { 0, 0, 1, i, 1 };
+    }
+
+    for (int i = 0; i < 7; i++) {
+        if (t[i]->isEmpty()) continue;
+        Node<card>* curr = t[i]->getHead();
+        int currentDepth = 1;
+        while (curr && curr->data.faceup) {
+            if (curr == t[i]->getHead()) {
+                for (int j = 0; j < 4; j++) if (game.can_move_to_foundation(*f[j], curr->data)) possible[possibleCount++] = { 1, i, 2, j, 1 };
+            }
+            for (int j = 0; j < 7; j++) if (i != j && game.can_move_to_tableau(*t[j], curr->data)) possible[possibleCount++] = { 1, i, 1, j, currentDepth };
+            curr = curr->next;
+            currentDepth++;
+        }
+    }
+
+    if (possibleCount == 0) {
+        if (!game.stock.isEmpty() || !game.waste.isEmpty()) {
+            stockHighlightTimer = 5.0f;
+            remainingHints--;
+            if (soundsOn) PlaySound(hintSnd);
+        }
+        return;
+    }
+
+    Hint h = possible[rand() % possibleCount];
+    hintAnimatedCards.clear();
+
+    hintStartPos.x = (h.srcType == 0) ? 150 * scaleX : (50 + h.srcIdx * 100) * scaleX;
+    hintEndPos.x = (h.destType == 2) ? (350 + h.destIdx * 100) * scaleX : (50 + h.destIdx * 100) * scaleX;
+
+    if (h.srcType == 0) {
+        hintStartPos.y = 30 * scaleY;
+        hintAnimatedCards.insertAtHead(game.waste.peek());
+    }
+    else {
+        int totalCount = t[h.srcIdx]->getCount();
+        hintStartPos.y = (180 * scaleY) + (totalCount - h.cardCount) * scaledTableauOffset;
+        Node<card>* node = t[h.srcIdx]->getHead();
+        for (int k = 0; k < h.cardCount; k++) {
+            hintAnimatedCards.insertAtTail(node->data);
+            node = node->next;
+        }
+    }
+
+    if (h.destType == 2) hintEndPos.y = 30 * scaleY;
+    else {
+        int destCount = t[h.destIdx]->getCount();
+        hintEndPos.y = (180 * scaleY) + (destCount == 0 ? 0 : (destCount - 1) * scaledTableauOffset);
+    }
+
+    isHintAnimating = true;
+    hintAnimTimer = 2.0f;
+    remainingHints--;
+    if (soundsOn) PlaySound(hintSnd);
+}
 void drawCard(card c, float x, float y) {
     if (!c.faceup) DrawTexture(cardBack, (int)x, (int)y, WHITE);
     else DrawTexture(cardTextures[c.getCardImageIndex()], (int)x, (int)y, WHITE);
