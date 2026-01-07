@@ -523,3 +523,81 @@ void serializePile(ofstream& file, string label, LinkedList<card>& pile) {
         curr = curr->next;
     }
 }
+ void saveGameState() {
+        ofstream file("solitaire_save.txt");
+        if (file.is_open()) {
+            file << moveCount << " " << difficultyStr << " " << remainingSeconds << "\n";
+            serializePile(file, "STOCK", game.stock);
+            serializePile(file, "WASTE", game.waste);
+            serializePile(file, "T1", game.tableau1);
+            serializePile(file, "T2", game.tableau2);
+            serializePile(file, "T3", game.tableau3);
+            serializePile(file, "T4", game.tableau4);
+            serializePile(file, "T5", game.tableau5);
+            serializePile(file, "T6", game.tableau6);
+            serializePile(file, "T7", game.tableau7);
+            serializePile(file, "F1", game.foundation1);
+            serializePile(file, "F2", game.foundation2);
+            serializePile(file, "F3", game.foundation3);
+            serializePile(file, "F4", game.foundation4);
+            file.close();
+        }
+    }
+   
+    void deserializePile(ifstream& file, LinkedList<card>& pile) {
+        string label; int count;
+        file >> label >> count;
+        pile.clear();
+        for (int i = 0; i < count; i++) {
+            card c; string color; int face;
+            file >> c.suit >> c.rankk >> color >> face;
+            c.color = color;
+            c.faceup = (face != 0);
+            pile.insertAtTail(c);
+        }
+    }
+    
+    bool loadGameState() {
+        ifstream file("solitaire_save.txt");
+        if (file.is_open()) {
+            file >> moveCount >> difficultyStr >> remainingSeconds;
+            deserializePile(file, game.stock);
+            deserializePile(file, game.waste);
+            deserializePile(file, game.tableau1);
+            deserializePile(file, game.tableau2);
+            deserializePile(file, game.tableau3);
+            deserializePile(file, game.tableau4);
+            deserializePile(file, game.tableau5);
+            deserializePile(file, game.tableau6);
+            deserializePile(file, game.tableau7);
+            deserializePile(file, game.foundation1);
+            deserializePile(file, game.foundation2);
+            deserializePile(file, game.foundation3);
+            deserializePile(file, game.foundation4);
+            file.close();
+
+            if (difficultyStr == "Easy") { remainingHints = 3; hintsPerUse = 3; }
+            else if (difficultyStr == "Medium") { remainingHints = 2; hintsPerUse = 2; }
+            else { remainingHints = 1; hintsPerUse = 1; }
+            loadBestScore(difficultyStr);
+            timeExpired = (remainingSeconds <= 0);
+            undoStack.clear();
+            return true;
+        }
+        return false;
+    }
+
+    void loadBestScore(string diff) {
+        string filename = (diff == "Easy") ? "easy.txt" : (diff == "Medium" ? "medium.txt" : "hard.txt");
+        ifstream file(filename.c_str());
+        if (file.is_open()) { file >> bestMoveCount; file.close(); }
+        else bestMoveCount = -1;
+    }
+
+    void saveBestScore() {
+        if (bestMoveCount == -1 || moveCount < bestMoveCount) {
+            string filename = (difficultyStr == "Easy") ? "easy.txt" : (difficultyStr == "Medium" ? "medium.txt" : "hard.txt");
+            ofstream file(filename.c_str());
+            if (file.is_open()) { file << moveCount; file.close(); bestMoveCount = moveCount; }
+        }
+    }
