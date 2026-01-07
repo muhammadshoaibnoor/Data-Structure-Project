@@ -1,4 +1,10 @@
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <string>
+#include <fstream>
+#include <algorithm>
+#include "raylib.h"
 using namespace std;
 
 template <class T>
@@ -156,7 +162,10 @@ public:
     string color;
     bool faceup;
     card() {}
-
+int getCardImageIndex()
+{
+    return suit * 13 + rankk;
+}
     ~card() {}
 };
 class Deck
@@ -601,3 +610,41 @@ void serializePile(ofstream& file, string label, LinkedList<card>& pile) {
             if (file.is_open()) { file << moveCount; file.close(); bestMoveCount = moveCount; }
         }
     }
+void setDifficulty(string diff) {
+    difficultyStr = diff;
+    timeExpired = false;
+    if (diff == "Easy") { remainingHints = 3; hintsPerUse = 3; remainingSeconds = 1200.0f; }
+    else if (diff == "Medium") { remainingHints = 2; hintsPerUse = 2; remainingSeconds = 900.0f; }
+    else { remainingHints = 1; hintsPerUse = 1; remainingSeconds = 480.0f; }
+    moveCount = 0;
+    loadBestScore(diff);
+    game = Deck(); game.createdeck(); game.shuffledeck(); game.dealtableau();
+    saveGameState();
+    undoStack.clear();
+    state = PLAYING;
+}
+void drawCard(card c, float x, float y) {
+    if (!c.faceup) DrawTexture(cardBack, (int)x, (int)y, WHITE);
+    else DrawTexture(cardTextures[c.getCardImageIndex()], (int)x, (int)y, WHITE);
+}
+
+void drawPile(LinkedList<card>& pile, float x, float y, float offset = 0) {
+    if (pile.isEmpty()) { DrawRectangleLines((int)x, (int)y, (int)scaledCardWidth, (int)scaledCardHeight, Fade(WHITE, 0.6f)); return; }
+    LinkedList<card> temp;
+    Node<card>* curr = pile.getHead();
+    while (curr) { temp.insertAtHead(curr->data); curr = curr->next; }
+    curr = temp.getHead();
+    int i = 0;
+    while (curr) { drawCard(curr->data, x, y + i * offset); curr = curr->next; i++; }
+}
+
+bool drawButton(Rectangle rect, const char* text, Color color) {
+    bool hovered = CheckCollisionPointRec(GetMousePosition(), rect);
+    DrawRectangleRec(rect, hovered ? ColorBrightness(color, 0.2f) : color);
+    DrawRectangleLinesEx(rect, 2, hovered ? WHITE : GRAY);
+    int fontSize = (int)(20 * minScale);
+    int textW = MeasureText(text, fontSize);
+    DrawText(text, (int)(rect.x + (rect.width - textW) / 2), (int)(rect.y + (rect.height - fontSize) / 2), fontSize, RAYWHITE);
+    return hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+}
+
