@@ -715,4 +715,155 @@ bool drawButton(Rectangle rect, const char* text, Color color) {
     DrawText(text, (int)(rect.x + (rect.width - textW) / 2), (int)(rect.y + (rect.height - fontSize) / 2), fontSize, RAYWHITE);
     return hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
+void handleInput() {
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        if (state == PLAYING) { saveGameState(); state = MAIN_MENU; return; }
+        if (state == DIFF_SELECT || state == INSTRUCTIONS || state == SETTINGS) { state = MAIN_MENU; return; }
+    }
 
+    if (state != PLAYING) return;
+
+    remainingSeconds -= GetFrameTime();
+    if (remainingSeconds <= 0) {
+        remainingSeconds = 0;
+        timeExpired = true;
+        state = LOST;
+        if (soundsOn) PlaySound(lossSnd);
+        return;
+    }
+
+    if (isHintAnimating) return;
+
+    Vector2 mPos = GetMousePosition();
+    LinkedList<card>* t[] = { &game.tableau1, &game.tableau2, &game.tableau3, &game.tableau4, &game.tableau5, &game.tableau6, &game.tableau7 };
+    LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
+
+    if (IsKeyPressed(KEY_H)) provideHint();
+    if (IsKeyPressed(KEY_U)) performUndo();
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (CheckCollisionPointRec(mPos, { 50 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+            saveStateForUndo(); game.drawtowastee(); moveCount++; if (soundsOn) PlaySound(click); saveGameState(); return;
+        }
+        if (!game.waste.isEmpty() && CheckCollisionPointRec(mPos, { 150 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+            saveStateForUndo();
+            card c; game.waste.deleteFromHead(c); draggedCards.insertAtHead(c);
+            isDragging = true; sourcePileType = 0; dragOffset = { mPos.x - 150 * scaleX, mPos.y - 30 * scaleY };
+            if (soundsOn) PlaySound(cardSlide); return;
+        }
+        for (int i = 0; i < 4; i++) {
+            float x = (350 + i * 100) * scaleX;
+            if (!f[i]->isEmpty() && CheckCollisionPointRec(mPos, { x, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+                saveStateForUndo();
+                card c; f[i]->deleteFromHead(c); draggedCards.insertAtHead(c);
+                isDragging = true; sourcePileType = 2; sourcePileIndex = i;
+                dragOffset = { mPos.x - x, mPos.y - 30 * scaleY }; if (soundsOn) PlaySound(cardSlide); return;
+            }
+        }
+        for (int i = 0; i < 7; i++) {
+            float x = (50 + i * 100) * scaleX;
+            int count = t[i]->getCount();
+            for (int j = 0; j < count; j++) {
+                float cardY = (180 * scaleY) + (count - 1 - j) * scaledTableauOffset;
+                if (CheckCollisionPointRec(mPos, { x, cardY, scaledCardWidth, (j == 0) ? scaledCardHeight : scaledTableauOffset })) {
+                    Node<card>* curr = t[i]->getHead(); for (int k = 0; k < j; k++) curr = curr->next;
+                    if (!curr->data.faceup) break;
+                    bool validSeq = true; Node<card>* check = t[i]->getHead();
+                    for (int k = 0; k < j; k++) {
+                        card c1 = check->data; card c2 = check->next->data;
+                        if (c1.color == c2.color || c1.rankk != c2.rankk - 1) { validSeq = false; break; }
+                        check = check->next;
+                    }
+                    if (!validSeq) break;
+                    saveStateForUndo();
+                    for (int k = 0; k <= j; k++) { card c; t[i]->deleteFromHead(c); draggedCards.insertAtHead(c); }
+                    isDragging = true; sourcePileType = 1; sourcePileIndex = i;
+                    dragOffset = { mPos.x - x, mPos.y - cardY }; if (soundsOn) PlaySound(cardSlide); return;
+                }
+            }
+        }
+    }
+
+    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDragging) {
+        bool moved = false; card bottomCard = draggedCards.peek();
+        if (draggedCards.getCount() == 1) {
+            for (int i = 0; i < 4; i++) {
+                float fX = (350 + i * 100) * scaleX;
+                if (CheckCollisionPointRec(mPos, { fX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+                    if (game.can_move_to_foundation(*f[i], bottomCard)) {
+                        card c; draggedCards.deleteFromHead(c); f[i]->insertAtHead(c);
+                        moved = true; moveCount++; break;
+                    }
+                }
+            }
+        }
+        if (!moved) {
+            for (int i = 0; i < 7; i++) {
+                float x = (50 + i * 100) * scaleX;
+                float y = (180 * scaleY) + (t[i]->isEmpty() ? 0 : (t[i]->getCount() - 1) * scaledTableauOffset);
+                if (CheckCollisionPointRec(mPos, { x, y, scaledCardWidth, scaledCardHeight * 2 })) {
+                    if (game.can_move_to_tableau(*t[i], bottomCard)) {
+                        card c; while (!draggedCards.isEmpty()) { draggedCards.deleteFromHead(c); t[i]->insertAtHead(c); }
+                        moved = true; moveCount++; break;
+                    }
+                }
+            }
+        }
+        if (!moved) {
+            DeckState dummy; undoStack.deleteFromHead(dummy);
+            card c;
+            while (!draggedCards.isEmpty()) {
+                draggedCards.deleteFromHead(c);
+                if (sourcePileType == 0) game.waste.insertAtHead(c);
+                else if (sourcePileType == 1) t[sourcePileIndex]->insertAtHead(c);
+                else f[sourcePileIndex]->insertAtHead(c);
+            }
+            if (soundsOn) PlaySound(click);
+        }
+        else {
+            if (sourcePileType == 1) {
+                int prevCount = t[sourcePileIndex]->getCount();
+                game.flip_tableau_top(*t[sourcePileIndex]);
+                if (t[sourcePileIndex]->getCount() == prevCount && soundsOn) PlaySound(cardFlip);
+            }
+            if (soundsOn) PlaySound(cardPlace); saveGameState();
+        }
+        isDragging = false;
+    }
+
+    if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+        if (CheckCollisionPointRec(mPos, { 150 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+            saveStateForUndo();
+            int before = game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount();
+            game.move_waste_to_foundation();
+            if (game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount() > before) {
+                moveCount++; saveGameState(); if (soundsOn) PlaySound(cardPlace);
+            }
+            else { DeckState dummy; undoStack.deleteFromHead(dummy); }
+        }
+        for (int i = 0; i < 7; i++) {
+            float x = (50 + i * 100) * scaleX;
+            float h = t[i]->isEmpty() ? scaledCardHeight : scaledCardHeight + (t[i]->getCount() - 1) * scaledTableauOffset;
+            if (CheckCollisionPointRec(mPos, { x, 180 * scaleY, scaledCardWidth, h })) {
+                saveStateForUndo();
+                int before = game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount();
+                game.move_tableau_to_foundation(*t[i]);
+                if (game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount() > before) {
+                    moveCount++; saveGameState(); if (soundsOn) PlaySound(cardPlace);
+                }
+                else { DeckState dummy; undoStack.deleteFromHead(dummy); }
+            }
+        }
+    }
+    if (!isDragging) {
+        if (game.check_win()) {
+            state = WON;
+            saveBestScore();
+            if (soundsOn) PlaySound(winSnd);
+        }
+        else if (game.isGameLost()) {
+            state = LOST;
+            if (soundsOn) PlaySound(lossSnd);
+        }
+    }
+}
