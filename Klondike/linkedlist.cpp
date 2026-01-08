@@ -715,6 +715,135 @@ bool drawButton(Rectangle rect, const char* text, Color color) {
     DrawText(text, (int)(rect.x + (rect.width - textW) / 2), (int)(rect.y + (rect.height - fontSize) / 2), fontSize, RAYWHITE);
     return hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
+void drawUI() {
+    if (state == MAIN_MENU) {
+        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.8f));
+        DrawText("KLONDIKE SOLITAIRE", (int)(240 * scaleX), (int)(100 * scaleY), (int)(35 * minScale), GOLD);
+        if (drawButton({ 300 * scaleX, 180 * scaleY, 200 * scaleX, 50 * scaleY }, "New Game", DARKBLUE)) state = DIFF_SELECT;
+        bool saveExists = FileExists("solitaire_save.txt");
+        if (drawButton({ 300 * scaleX, 250 * scaleY, 200 * scaleX, 50 * scaleY }, "Continue Game", saveExists ? DARKGREEN : GRAY)) {
+            if (saveExists) { if (loadGameState()) state = PLAYING; }
+        }
+        if (drawButton({ 300 * scaleX, 320 * scaleY, 200 * scaleX, 50 * scaleY }, "Instructions", MAROON)) state = INSTRUCTIONS;
+        if (drawButton({ 300 * scaleX, 390 * scaleY, 200 * scaleX, 50 * scaleY }, "Settings", DARKPURPLE)) state = SETTINGS;
+        DrawText("Press ESC to exit.", (int)(250 * scaleX), (int)(460 * scaleY), (int)(30 * minScale), RAYWHITE);
+    }
+    else if (state == SETTINGS) {
+        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.9f));
+        DrawText("SETTINGS", (int)(320 * scaleX), (int)(150 * scaleY), (int)(35 * minScale), GOLD);
+        if (drawButton({ 300 * scaleX, 230 * scaleY, 200 * scaleX, 50 * scaleY }, musicOn ? "Music: ON" : "Music: OFF", musicOn ? GREEN : RED)) {
+            musicOn = !musicOn;
+            if (musicOn) PlayMusicStream(bgm); else StopMusicStream(bgm);
+            saveSettings();
+        }
+        if (drawButton({ 300 * scaleX, 300 * scaleY, 200 * scaleX, 50 * scaleY }, soundsOn ? "Sounds: ON" : "Sounds: OFF", soundsOn ? GREEN : RED)) {
+            soundsOn = !soundsOn;
+            saveSettings();
+        }
+        if (drawButton({ 300 * scaleX, 400 * scaleY, 200 * scaleX, 50 * scaleY }, "Back", GRAY)) state = MAIN_MENU;
+    }
+    else if (state == DIFF_SELECT) {
+        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.8f));
+        DrawText("SELECT DIFFICULTY", (int)(250 * scaleX), (int)(150 * scaleY), (int)(30 * minScale), RAYWHITE);
+        if (drawButton({ 300 * scaleX, 230 * scaleY, 200 * scaleX, 50 * scaleY }, "Easy", GREEN)) setDifficulty("Easy");
+        if (drawButton({ 300 * scaleX, 300 * scaleY, 200 * scaleX, 50 * scaleY }, "Medium", BLUE)) setDifficulty("Medium");
+        if (drawButton({ 300 * scaleX, 370 * scaleY, 200 * scaleX, 50 * scaleY }, "Hard", RED)) setDifficulty("Hard");
+        if (drawButton({ 300 * scaleX, 480 * scaleY, 200 * scaleX, 50 * scaleY }, "Back", GRAY)) state = MAIN_MENU;
+    }
+    else if (state == INSTRUCTIONS) {
+        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.9f));
+        DrawText("HOW TO PLAY", (int)(300 * scaleX), (int)(80 * scaleY), (int)(30 * minScale), GOLD);
+        DrawText("- Build foundations from Ace to King by suit.", (int)(100 * scaleX), (int)(150 * scaleY), (int)(20 * minScale), RAYWHITE);
+        DrawText("- Build tableaus descending with alternating colors.", (int)(100 * scaleX), (int)(190 * scaleY), (int)(20 * minScale), RAYWHITE);
+        DrawText("- Click the deck to draw cards into the waste pile.", (int)(100 * scaleX), (int)(230 * scaleY), (int)(20 * minScale), RAYWHITE);
+        DrawText("- Move kings to empty tableau spots.", (int)(100 * scaleX), (int)(270 * scaleY), (int)(20 * minScale), RAYWHITE);
+        DrawText("- Right-Click cards to auto-move to foundations.", (int)(100 * scaleX), (int)(310 * scaleY), (int)(20 * minScale), RAYWHITE);
+        DrawText("- H: Hint | U: Undo | R: Restart | ESC: Menu.", (int)(100 * scaleX), (int)(350 * scaleY), (int)(20 * minScale), RAYWHITE);
+        if (drawButton({ 300 * scaleX, 450 * scaleY, 200 * scaleX, 50 * scaleY }, "Back", DARKBLUE)) state = MAIN_MENU;
+    }
+    else {
+        DrawTexture(background, 0, 0, WHITE);
+
+        if (stockHighlightTimer > 0) {
+            stockHighlightTimer -= GetFrameTime();
+            DrawRectangleLinesEx({ 50 * scaleX - 2, 30 * scaleY - 2, scaledCardWidth + 4, scaledCardHeight + 4 }, 3, YELLOW);
+        }
+
+        if (!game.stock.isEmpty()) DrawTexture(cardBack, (int)(50 * scaleX), (int)(30 * scaleY), WHITE);
+        else DrawRectangleLines((int)(50 * scaleX), (int)(30 * scaleY), (int)scaledCardWidth, (int)scaledCardHeight, WHITE);
+        if (!game.waste.isEmpty() && !(isDragging && sourcePileType == 0)) drawCard(game.waste.peek(), 150 * scaleX, 30 * scaleY);
+
+        LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
+        for (int i = 0; i < 4; i++) {
+            float x = (350 + i * 100) * scaleX;
+            if (!f[i]->isEmpty() && !(isDragging && sourcePileType == 2 && sourcePileIndex == i)) drawCard(f[i]->peek(), x, 30 * scaleY);
+            else DrawRectangleLines((int)x, (int)(30 * scaleY), (int)scaledCardWidth, (int)scaledCardHeight, Fade(WHITE, 0.6f));
+        }
+
+        LinkedList<card>* t[] = { &game.tableau1, &game.tableau2, &game.tableau3, &game.tableau4, &game.tableau5, &game.tableau6, &game.tableau7 };
+        for (int i = 0; i < 7; i++) {
+            float x = (50 + i * 100) * scaleX;
+            if (isDragging && sourcePileType == 1 && sourcePileIndex == i) {
+                LinkedList<card> rem; Node<card>* c = t[i]->getHead();
+                while (c) { rem.insertAtHead(c->data); c = c->next; }
+                Node<card>* rc = rem.getHead(); int idx = 0;
+                while (rc) { drawCard(rc->data, x, (180 * scaleY) + idx * scaledTableauOffset); rc = rc->next; idx++; }
+            }
+            else drawPile(*t[i], x, 180 * scaleY, scaledTableauOffset);
+        }
+
+        if (isDragging) {
+            Vector2 m = GetMousePosition();
+            LinkedList<card> tempDisp; Node<card>* c = draggedCards.getHead();
+            while (c) { tempDisp.insertAtHead(c->data); c = c->next; }
+            Node<card>* disp = tempDisp.getHead(); int i = 0;
+            while (disp) { drawCard(disp->data, m.x - dragOffset.x, m.y - dragOffset.y + i * scaledTableauOffset); disp = disp->next; i++; }
+        }
+
+        if (isHintAnimating) {
+            hintAnimTimer -= GetFrameTime();
+            if (hintAnimTimer <= 0) isHintAnimating = false;
+            else {
+                float t_val = (hintAnimTimer > 1.0f) ? (2.0f - hintAnimTimer) : hintAnimTimer;
+                Vector2 currentPos = { Lerp(hintStartPos.x, hintEndPos.x, t_val), Lerp(hintStartPos.y, hintEndPos.y, t_val) };
+
+                Node<card>* node = hintAnimatedCards.getHead();
+                int idx = 0;
+                while (node) {
+                    drawCard(node->data, currentPos.x, currentPos.y + idx * scaledTableauOffset);
+                    node = node->next;
+                    idx++;
+                }
+            }
+        }
+
+        int mins = (int)remainingSeconds / 60;
+        int secs = (int)remainingSeconds % 60;
+        int uiFontSize = (int)(20 * minScale);
+        DrawText(TextFormat("Time: %02d:%02d", mins, secs), (int)(150 * scaleX), (int)(570 * scaleY), uiFontSize, (remainingSeconds < 30) ? RED : RAYWHITE);
+        DrawText(TextFormat("Moves: %d", moveCount), (int)(300 * scaleX), (int)(570 * scaleY), uiFontSize, RAYWHITE);
+        if (bestMoveCount != -1) DrawText(TextFormat("Best: %d", bestMoveCount), (int)(400 * scaleX), (int)(570 * scaleY), uiFontSize, GOLD);
+        DrawText(TextFormat("Hints: %d", remainingHints), (int)(500 * scaleX), (int)(570 * scaleY), uiFontSize, RAYWHITE);
+
+        if (drawButton({ 10 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Menu", GRAY)) { saveGameState(); state = MAIN_MENU; }
+        if (drawButton({ 75 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Reset", MAROON)) { saveGameState(); setDifficulty(difficultyStr); }
+        if (drawButton({ 600 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Hint", DARKGREEN)) provideHint();
+        if (drawButton({ 665 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Undo", DARKBLUE)) performUndo();
+        if (drawButton({ 730 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, musicOn ? "Mute" : "Unmute", musicOn ? BLUE : RED)) {
+            musicOn = !musicOn;
+            if (musicOn) PlayMusicStream(bgm); else StopMusicStream(bgm);
+            saveSettings();
+        }
+
+        if (state == WON || state == LOST) {
+            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.7f));
+            const char* lostMsg = timeExpired ? "Time's Up! GAME OVER" : "GAME OVER";
+            DrawText(state == WON ? "YOU WIN!" : lostMsg, (int)(240 * scaleX), (int)(250 * scaleY), (int)(40 * minScale), state == WON ? GOLD : RED);
+            DrawText(TextFormat("Final Moves: %d", moveCount), (int)(320 * scaleX), (int)(310 * scaleY), (int)(20 * minScale), RAYWHITE);
+            if (drawButton({ 300 * scaleX, 360 * scaleY, 200 * scaleX, 50 * scaleY }, "Menu", DARKBLUE)) state = MAIN_MENU;
+        }
+    }
+}
 void handleInput() {
     if (IsKeyPressed(KEY_ESCAPE)) {
         if (state == PLAYING) { saveGameState(); state = MAIN_MENU; return; }
