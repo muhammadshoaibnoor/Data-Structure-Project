@@ -64,7 +64,7 @@ This project was developed to fulfill the requirements of the Data Structures co
 
 1. ****M Shoaib**** (Group Lead)
 2. **M Jamal Ahmad Khan**
-3. **M Naeed**
+3. **M Naveed**
 4. **M Wasif**
 5. **Bilal Ahmad Khan**
 6. **Mubashir Hassan**
