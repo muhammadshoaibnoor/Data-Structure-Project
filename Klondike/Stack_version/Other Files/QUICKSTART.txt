@@ -1,0 +1,56 @@
+=====================================
+KLONDIKE SOLITAIRE - QUICK START
+=====================================
+
+The game has been successfully compiled!
+
+HOW TO RUN:
+-----------
+1. Double-click "klondike.exe" to start the game
+   OR
+2. Open terminal and type: klondike.exe
+
+GAME CONTROLS:
+--------------
+- SPACE BAR    : Draw a card from the deck
+- LEFT CLICK   : Select and move cards
+- ESC          : Start a new game
+- Close Window : Exit the game
+
+HOW TO PLAY:
+------------
+1. Click the DECK (top-left blue card) to draw cards
+2. Click on cards to automatically move them to foundation (top-right)
+3. Click on a card in the tableau, then click on another pile to move it
+4. Build tableau piles in descending order with alternating colors
+5. Build foundation piles from Ace to King in the same suit
+6. Win by completing all 4 foundation piles!
+
+GAME FEATURES:
+--------------
+✓ Stack-based data structure implementation
+✓ Full Klondike Solitaire rules
+✓ Auto-move to foundation
+✓ Card drag-and-drop between tableau piles
+✓ Automatic deck reset when empty
+✓ Win detection and celebration screen
+✓ Smooth graphics with Raylib
+
+TECHNICAL DETAILS:
+------------------
+- Language: C++
+- Graphics: Raylib
+- Data Structure: Custom Stack<T> template class
+- All game piles use Stack: deck, waste, tableau[7], foundation[4]
+
+For more information, see README.md
+
+TROUBLESHOOTING:
+----------------
+If the game doesn't run:
+1. Make sure Raylib is installed on your system
+2. Check that all DLL files are in the same directory
+3. Run from command line to see error messages
+
+Enjoy the game!
+=====================================
