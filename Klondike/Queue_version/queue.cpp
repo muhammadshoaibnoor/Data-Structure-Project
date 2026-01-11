@@ -4,6 +4,8 @@
 #include <filesystem>
 #include "raylib.h"
 
+#include <cstring>
+
 using namespace std;
 namespace fs=filesystem;
 
@@ -331,6 +333,149 @@ public:
     }
 
     bool check_empty() { return all_card.emptyy(); }
+};
+// ============================================================================
+// PART 2: Game Rules and Tableau Management
+// ============================================================================
+
+class GameRules 
+{
+public:
+    bool tab_move(CardItem from, CardItem to) 
+    {
+        if (to.rank_no == 0) return from.king(); 
+        return from.check_red() != to.check_red() && from.rank_no == to.rank_no - 1;
+    }
+    
+    bool foundation_move(CardItem from, CardItem to) 
+    {
+        return from.suit == to.suit && from.rank_no == to.rank_no + 1;
+    }
+    
+    bool foundation_place(Queue<CardItem> pile, CardItem card) 
+    {
+        if (pile.emptyy()) return card.ace();
+        if (pile.peekRear().rank_no == 0) return false; 
+        return foundation_move(card, pile.peekRear());
+    }
+    
+    bool check_win(Queue<CardItem> piles[4]) 
+    {
+        for (int i = 0; i < 4; i++) 
+        {
+            if (piles[i].gsize() != 13) return false;
+        }
+        return true;
+    }
+    
+    string getSuitColor(char suit) 
+    {
+        if (suit == 'H' || suit == 'D') return "Red";
+        return "Black";
+    }
+};
+
+class TableauColumn 
+{
+public:
+    Queue<CardItem> card_col;
+    
+    TableauColumn() : card_col(52) {}
+    
+    void add_card(CardItem c) { card_col.enqueue(c); }
+    
+    CardItem rem_tcard() 
+    {
+        if (card_col.emptyy()) return CardItem();
+        Queue<CardItem> temp(52);
+        CardItem last;
+        while (!card_col.emptyy()) 
+        {
+            last = card_col.dequeue();
+            if (!card_col.emptyy()) temp.enqueue(last);
+        }
+        while (!temp.emptyy()) card_col.enqueue(temp.dequeue());
+        return last;
+    }
+    
+    CardItem get_tcard() 
+    {
+        return card_col.emptyy() ? CardItem() : card_col.peekRear();
+    }
+    
+    bool check_emp() { return card_col.emptyy(); }
+    int card_count() { return card_col.gsize();}
+    
+    CardItem card_at(int i) 
+    {
+         return card_col.valueat(i); 
+    }
+    
+    Queue<CardItem> get_cards_from(int idx) 
+    {
+        Queue<CardItem> result(52);
+        for (int i = idx; i < card_col.gsize(); i++) 
+        {
+            result.enqueue(card_col.valueat(i));
+        }
+        return result;
+    }
+    
+    void remove_from(int idx) 
+    {
+        Queue<CardItem> temp(52);
+        for (int i = 0; i < idx; i++) temp.enqueue(card_col.valueat(i));
+        card_col.clearr();
+        while (!temp.emptyy()) card_col.enqueue(temp.dequeue());
+    }
+    
+    void flip_top() 
+    {
+        if (card_col.emptyy()) return;
+        Queue<CardItem> temp(52);
+        CardItem last;
+        while (!card_col.emptyy()) 
+        {
+            last = card_col.dequeue();
+            if (!card_col.emptyy()) temp.enqueue(last);
+        }
+        last.flip_card();
+        while (!temp.emptyy()) card_col.enqueue(temp.dequeue());
+        card_col.enqueue(last);
+    }
+};
+
+struct GameSnapshot 
+{
+    Queue<CardItem> stock, waste, found[4], tabs[7];
+    int score, moves;
+    
+    GameSnapshot() : stock(24), waste(24) 
+    {
+        for (int i = 0; i < 4; i++) found[i]=Queue<CardItem>(13);
+        for (int i = 0; i < 7; i++) tabs[i] = Queue<CardItem>(52);
+        score = moves = 0;
+    }
+};
+
+struct GameStatistics 
+{
+    int gamesPlayed;
+    int gamesWon;
+    int highestScore;
+    int totalMoves;
+    int totalScore;
+    
+    GameStatistics() : gamesPlayed(0), gamesWon(0), highestScore(0), totalMoves(0), totalScore(0) {}
+    
+    void addGame(int score, int moves, bool won) 
+    {
+        gamesPlayed++;
+        if (won) gamesWon++;
+        if (score > highestScore) highestScore=score;
+        totalMoves+=moves;
+        totalScore+=score;
+    }
 };
 int main(){
   return 0;
