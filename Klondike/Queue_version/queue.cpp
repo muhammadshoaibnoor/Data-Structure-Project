@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ctime>
 #include <string>
+#include <cstring>
 #include <cmath>
 #include <cstring>
 #include <filesystem>
@@ -784,6 +785,429 @@ public:
         DrawText("EASY: Draw 1 card at a time, unlimited recycles", screenWidth/2 - 250, descY, 18, LIGHTGRAY);
         DrawText("MEDIUM: Draw 3 cards at a time, unlimited recycles", screenWidth/2 - 260, descY + 30, 18, LIGHTGRAY);
         DrawText("HARD: Draw 3 cards, only 3 recycles allowed", screenWidth/2 - 220, descY + 60, 18, LIGHTGRAY);
+    }
+};
+
+class SolitaireGame 
+{
+public:
+    DeckOfCards deck;
+    Queue<CardItem> stock, waste, found[4];
+    TableauColumn tabs[7];
+    GameRules rules;
+    int score, moves, cw, ch;
+    bool won, dragging, paused;
+    Texture2D cardTextures[53];
+    Texture2D backTexture;
+    Font gameFont;
+    bool cardsLoaded;
+    GameScreen currentScreen;
+    Queue<GameSnapshot> undos;
+    int dragType, dragIdx, dragCard;
+    Vector2 dragOff;
+    Queue<CardItem> dragCards;
+    Queue<CardAnimation> anims;
+    Queue<Particle> particles;
+    float celebTime;
+    double lastClick;
+    int lastCol;
+    Rectangle stockRect, wasteRect, foundRects[4], tabRects[7];
+    bool showHelp;
+    float hoverGlow;
+    int hoverCol;
+    Queue<Button> levelButtons;
+    GameStatistics statistics;
+    DifficultyLevel currentDifficulty;
+    int recycleCount;
+    int maxRecycles;
+    
+    SolitaireGame() : stock(24), waste(24), undos(50), dragCards(52), anims(100), particles(200), levelButtons(3) 
+    {
+        for (int i = 0; i < 4; i++) found[i] = Queue<CardItem>(13);
+        score = moves = 0;
+        won = dragging = paused = showHelp = false;
+        cw = 100; ch = 140;
+        lastClick = 0; lastCol = hoverCol = -1;
+        celebTime = 0;
+        hoverGlow = 0;
+        dragType = dragIdx = dragCard = 0;
+        dragOff = {0, 0};
+        cardsLoaded = false;
+        currentScreen = LEVEL_SELECT;
+        currentDifficulty = EASY;
+        recycleCount = 0;
+        maxRecycles = 3;
+        initLevelSelect();
+    }
+    
+    void initLevelSelect() 
+    {
+        int centerX = GetScreenWidth() / 2;
+        int buttonWidth = 300;
+        int buttonHeight = 60;
+        int startY = 300;
+        int buttonSpacing = 20;
+        
+        levelButtons.clearr();
+        levelButtons.enqueue({Rectangle{(float)centerX - buttonWidth/2, (float)startY, (float)buttonWidth, (float)buttonHeight}, 
+                              "EASY ", Color{100, 149, 237, 255}, Color{65, 105, 225, 255}, false});
+        levelButtons.enqueue({Rectangle{(float)centerX - buttonWidth/2, (float)(startY + buttonHeight + buttonSpacing), (float)buttonWidth, (float)buttonHeight}, 
+                              "MEDIUM ", Color{255, 140, 0, 255}, Color{255, 165, 0, 255}, false});
+        levelButtons.enqueue({Rectangle{(float)centerX - buttonWidth/2, (float)(startY + 2*(buttonHeight + buttonSpacing)), (float)buttonWidth, (float)buttonHeight}, 
+                              "HARD", Color{220, 20, 60, 255}, Color{178, 34, 34, 255}, false});
+    }
+    
+    void save() {
+        if (undos.gsize() >= 50) {
+            undos.dequeue();
+        }
+        GameSnapshot s;
+        s.stock = stock; s.waste = waste;
+        for (int i = 0; i < 4; i++) s.found[i] = found[i];
+        for (int i = 0; i < 7; i++) s.tabs[i] = tabs[i].card_col;
+        s.score = score; s.moves = moves;
+        undos.enqueue(s);
+    }
+    
+    void undo() {
+        if (undos.emptyy()) return;
+        
+        GameSnapshot s = undos.peekRear();
+        
+        Queue<GameSnapshot> temp(50);
+        int undoSize = undos.gsize();
+        for (int i = 0; i < undoSize - 1; i++) {
+            temp.enqueue(undos.valueat(i));
+        }
+        undos = temp;
+        
+        stock = s.stock; waste = s.waste;
+        for (int i = 0; i < 4; i++) found[i] = s.found[i];
+        for (int i = 0; i < 7; i++) tabs[i].card_col = s.tabs[i];
+        score = s.score; moves = s.moves;
+    }
+    
+    void init() {
+        deck.full_deck();
+        
+        stock.clearr();
+        waste.clearr();
+        for (int i = 0; i < 4; i++) found[i].clearr();
+        for (int i = 0; i < 7; i++) tabs[i].card_col.clearr();
+        
+        for (int c = 0; c < 7; c++) {
+            for (int r = 0; r <= c; r++) {
+                CardItem card = deck.draw_card();
+                if (r == c) card.is_faceup = true;
+                tabs[c].add_card(card);
+            }
+        }
+        
+        while (!deck.check_empty()) stock.enqueue(deck.draw_card());
+        
+        score = 0;
+        moves = 0;
+        won = false;
+        undos.clearr();
+        recycleCount = 0;
+        save();
+        updateRects();
+        
+        statistics.gamesPlayed++;
+    }
+    
+    void updateRects() {
+        int y = 100;
+        stockRect = {30, (float)y, (float)cw, (float)ch};
+        wasteRect = {30.0f + cw + 20, (float)y, (float)cw, (float)ch};
+        
+        int fx = 30 + (cw + 20) * 3;
+        for (int i = 0; i < 4; i++) {
+            foundRects[i] = {(float)(fx + i * (cw + 10)), (float)y, (float)cw, (float)ch};
+        }
+        
+        int ty = y + ch + 50;
+        for (int i = 0; i < 7; i++) {
+            tabRects[i] = {(float)(30 + i * (cw + 20)), (float)ty, (float)cw, (float)(ch + 400)};
+        }
+    }
+    
+    void drawStock() {
+        if (!stock.emptyy()) {
+            save();
+            
+            if (currentDifficulty == EASY) {
+                CardItem c = stock.dequeue();
+                c.is_faceup = true;
+                waste.enqueue(c);
+                moves++;
+                addAnimation(stockRect.x, stockRect.y, wasteRect.x, wasteRect.y, c);
+            } else {
+                int cardsToDraw = 3;
+                int cardsDrawn = 0;
+                CardItem lastCard;
+                
+                while (!stock.emptyy() && cardsDrawn < cardsToDraw) {
+                    CardItem c = stock.dequeue();
+                    c.is_faceup = true;
+                    waste.enqueue(c);
+                    cardsDrawn++;
+                    lastCard = c;
+                }
+                
+                moves++;
+                
+                if (cardsDrawn > 0) {
+                    addAnimation(stockRect.x, stockRect.y, wasteRect.x, wasteRect.y, lastCard);
+                }
+            }
+        } else if (!waste.emptyy()) {
+            recycleWaste();
+        }
+    }
+    
+    void recycleWaste() {
+        if (currentDifficulty == HARD && recycleCount >= maxRecycles) {
+            return;
+        }
+        
+        save();
+        
+        int wasteSize = waste.gsize();
+        if (wasteSize > 0) {
+            CardItem* tempArr = new CardItem[wasteSize];
+            
+            for (int i = 0; i < wasteSize; i++) {
+                tempArr[i] = waste.valueat(i);
+            }
+            
+            waste.clearr();
+            
+            for (int i = 0; i < wasteSize; i++) {
+                CardItem c = tempArr[i];
+                c.is_faceup = false;
+                stock.enqueue(c);
+            }
+            
+            delete[] tempArr;
+            
+            moves++;
+            score -= 100;
+            if (score < 0) score = 0;
+            recycleCount++;
+            
+            addAnimation(wasteRect.x, wasteRect.y, stockRect.x, stockRect.y, 
+                        CardItem(0, ' ', false));
+        }
+    }
+    
+    void addAnimation(float sx, float sy, float ex, float ey, CardItem c) {
+        CardAnimation a;
+        a.active = true;
+        a.start = {sx, sy};
+        a.end = {ex, ey};
+        a.progress = 0;
+        a.cardRank = c.rank_no;
+        a.cardSuit = c.suit;
+        a.duration = 0.3f;
+        anims.enqueue(a);
+    }
+    
+    void addParticles(float x, float y, Color col) {
+        for (int i = 0; i < 20; i++) {
+            Particle p;
+            p.pos = {x + cw/2, y + ch/2};
+            float angle = (float)rand() / RAND_MAX * 6.28f;
+            float speed = 50 + rand() % 100;
+            p.vel = {std::cos(angle) * speed, std::sin(angle) * speed};
+            p.color = col;
+            p.life = 1.0f;
+            p.size = 3.0f + rand() % 5;
+            particles.enqueue(p);
+        }
+    }
+    
+    void updateAnimations(float dt) {
+        Queue<CardAnimation> tempAnims(100);
+        int animSize = anims.gsize();
+        for (int i = 0; i < animSize; i++) {
+            CardAnimation anim = anims.valueat(i);
+            anim.progress += dt / anim.duration;
+            if (anim.progress < 1.0f) {
+                tempAnims.enqueue(anim);
+            }
+        }
+        anims = tempAnims;
+        
+        Queue<Particle> tempParticles(200);
+        int particleSize = particles.gsize();
+        for (int i = 0; i < particleSize; i++) {
+            Particle p = particles.valueat(i);
+            p.pos.x += p.vel.x * dt;
+            p.pos.y += p.vel.y * dt;
+            p.vel.y += 200 * dt;
+            p.life -= dt;
+            if (p.life > 0) {
+                tempParticles.enqueue(p);
+            }
+        }
+        particles = tempParticles;
+        
+        hoverGlow += dt * 3;
+        if (hoverGlow > 6.28f) hoverGlow -= 6.28f;
+        
+        if (won) {
+            celebTime += dt;
+            if ((int)(celebTime * 10) % 3 == 0) {
+                float x = 200 + rand() % 800;
+                float y = 100 + rand() % 400;
+                Color cols[] = {RED, GOLD, BLUE, GREEN, PURPLE, YELLOW};
+                addParticles(x, y, cols[rand() % 6]);
+            }
+        }
+    }
+    
+    bool moveToFoundation(int source, int idx) {
+        CardItem card;
+        if (source == 0) {
+            if (waste.emptyy()) return false;
+            card = waste.peekRear();
+        } else if (source <= 7) {
+            if (tabs[source - 1].check_emp()) return false;
+            card = tabs[source - 1].get_tcard();
+            if (!card.is_faceup) return false;
+        } else return false;
+        
+        int fi = card.suit == 'H' ? 0 : card.suit == 'D' ? 1 : card.suit == 'S' ? 2 : 3;
+        
+        if (!rules.foundation_place(found[fi], card)) return false;
+        
+        save();
+        float sx, sy;
+        CardItem movedCard;
+        
+        if (source == 0) {
+            movedCard = waste.peekRear();
+            if (movedCard.rank_no == 0) return false;
+            
+            Queue<CardItem> newWaste(24);
+            int wasteSize = waste.gsize();
+            
+            if (wasteSize == 0) return false;
+            
+            for (int i = 0; i < wasteSize - 1; i++) {
+                newWaste.enqueue(waste.valueat(i));
+            }
+            
+            movedCard = waste.valueat(wasteSize - 1);
+            waste = newWaste;
+            
+            sx = wasteRect.x; sy = wasteRect.y;
+        } else {
+            movedCard = tabs[source - 1].rem_tcard();
+            
+            if (!tabs[source - 1].check_emp() && !tabs[source - 1].get_tcard().is_faceup) {
+                tabs[source - 1].flip_top();
+                score += 5;
+            }
+            
+            sx = tabRects[source - 1].x;
+            sy = tabRects[source - 1].y + tabs[source - 1].card_count() * 25;
+        }
+        
+        found[fi].enqueue(movedCard);
+        moves++;
+        
+        if (source == 0) {
+            score += 10;
+        } else {
+            score += 10;
+        }
+        
+        addAnimation(sx, sy, foundRects[fi].x, foundRects[fi].y, movedCard);
+        addParticles(foundRects[fi].x, foundRects[fi].y, movedCard.check_red() ? RED : DARKBLUE);
+        
+        if (rules.check_win(found)) {
+            won = true;
+            statistics.gamesWon++;
+            statistics.addGame(score, moves, true);
+        }
+        
+        return true;
+    }
+    
+    bool moveCards(int from, int to, int startIdx) {
+        if (from == to || from < 1 || from > 7 || to < 1 || to > 7) return false;
+        if (tabs[from - 1].check_emp() || startIdx >= tabs[from - 1].card_count()) return false;
+        
+        CardItem moving = tabs[from - 1].card_at(startIdx);
+        if (!moving.is_faceup) return false;
+        
+        bool valid = false;
+        if (tabs[to - 1].check_emp()) {
+            valid = (moving.king());
+        } else {
+            CardItem dest = tabs[to - 1].get_tcard();
+            valid = rules.tab_move(moving, dest);
+        }
+        
+        if (!valid) return false;
+        
+        save();
+        
+        Queue<CardItem> cardsToMove = tabs[from - 1].get_cards_from(startIdx);
+        int numCardsMoved = cardsToMove.gsize();
+        
+        while (!cardsToMove.emptyy()) {
+            tabs[to - 1].add_card(cardsToMove.dequeue());
+        }
+        
+        tabs[from - 1].remove_from(startIdx);
+        
+        if (!tabs[from - 1].check_emp() && !tabs[from - 1].get_tcard().is_faceup) {
+            tabs[from - 1].flip_top();
+            score += 5;
+        }
+        
+        moves++;
+        return true;
+    }
+    
+    bool moveWasteToTableau(int to) {
+        if (to < 1 || to > 7 || waste.emptyy()) return false;
+        
+        CardItem moving = waste.peekRear();
+        
+        bool valid = false;
+        if (tabs[to - 1].check_emp()) {
+            valid = (moving.king());
+        } else {
+            CardItem dest = tabs[to - 1].get_tcard();
+            valid = rules.tab_move(moving, dest);
+        }
+        
+        if (!valid) return false;
+        
+        save();
+        
+        CardItem movedCard;
+        Queue<CardItem> newWaste(24);
+        int wasteSize = waste.gsize();
+        
+        if (wasteSize == 0) return false;
+        
+        for (int i = 0; i < wasteSize - 1; i++) {
+            newWaste.enqueue(waste.valueat(i));
+        }
+        
+        movedCard = waste.valueat(wasteSize - 1);
+        waste = newWaste;
+        
+        tabs[to - 1].add_card(movedCard);
+        
+        moves++;
+        score += 5;
+        return true;
     }
 };
 int main(){
