@@ -1865,3 +1865,66 @@ public:
 
 
 };
+
+
+int main() 
+{
+    InitWindow(1600, 1000, "Klondike Solitaire");
+    SetTargetFPS(60);
+    
+    SolitaireGame game;
+    game.loadTextures();
+    
+    while (!WindowShouldClose()) {
+        float dt=GetFrameTime();
+        
+
+        if (game.currentScreen==PLAYING) 
+{
+            game.updateAnimations(dt);
+ }
+        
+        switch(game.currentScreen) 
+{
+            case LEVEL_SELECT:
+                game.handleLevelSelectInput();
+                break;
+            case PLAYING:
+                game.handleGameInput();
+                break;
+            case HELP:
+                game.handleHelpInput();
+                break;
+            case STATS:
+                game.handleStatsInput();
+                break;
+            case SETTINGS:
+                game.handleSettingsInput();
+             break;
+}
+        
+        BeginDrawing();
+        ClearBackground(Color{15, 30, 60, 255});
+        switch(game.currentScreen) 
+{
+            case LEVEL_SELECT:
+                game.renderLevelSelect();
+                break;
+            case PLAYING:
+                game.renderGame();
+                break;
+            case HELP:
+                game.renderHelp();
+                break;
+            case STATS:
+                game.renderStats();
+                break;
+ }
+        
+        EndDrawing();
+}
+    
+    game.unloadTextures(); 
+    CloseWindow();  
+    return 0;
+}
