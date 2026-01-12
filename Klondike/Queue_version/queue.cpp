@@ -9,7 +9,12 @@
 
 using namespace std;
 namespace fs=filesystem;
-
+struct pair {
+    T1 first;
+    T2 second;
+    
+    pair(T1 f = T1(), T2 s = T2()) : first(f), second(s) {}
+};
 
 
 struct Particle 
