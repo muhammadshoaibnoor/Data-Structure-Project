@@ -9,11 +9,11 @@
 using namespace std;
 namespace fs=filesystem;
 template<typename T1, typename T2>
-struct pair {
+struct tpair {
     T1 first;
     T2 second;
     
-    pair(T1 f = T1(), T2 s = T2()) : first(f), second(s) {}
+    tpair(T1 f = T1(), T2 s = T2()) : first(f), second(s) {}
 };
 
 struct Particle 
@@ -556,7 +556,7 @@ public:
                               "MEDIUM ", Color{255, 140, 0, 255}, Color{255, 165, 0, 255}, false});
         levelButtons.enqueue({Rectangle{(float)centerX - buttonWidth/2, (float)(startY + 2*(buttonHeight + buttonSpacing)), (float)buttonWidth, (float)buttonHeight}, 
                               "HARD", Color{220, 20, 60, 255}, Color{178, 34, 34, 255}, false});
-    }
+}
     
     void loadTextures() 
 {
@@ -569,16 +569,15 @@ public:
         bool allCardsLoaded = true;
         int idx = 0;
         
-        // Map suits to folder names
-        pair<char, string> suits[] = {
+        tpair<char, string> suits[] = {
             {'H', "hearts"},
             {'D', "diamonds"},
             {'S', "spades"},
             {'C', "clubs"}
         };
         
-        // Map ranks to file names
-        pair<int, string> ranks[] = {
+       
+        tpair<int, string> ranks[] = {
             {1, "ace"},
             {2, "2"},
             {3, "3"},
@@ -594,7 +593,6 @@ public:
             {13, "king"}
         };
         
-        // Try to load cards from "cards" folder
         for (int s = 0; s < 4; s++) {
             for (int r = 0; r < 13; r++) {
                 string filename = "cards/" + ranks[r].second + "_of_" + suits[s].second + ".png";
@@ -602,7 +600,7 @@ public:
                 if (fs::exists(filename)) {
                     Image img = LoadImage(filename.c_str());
                     if (img.data) {
-                        // Resize to match current card dimensions
+                       
                         ImageResize(&img, cw, ch);
                         cardTextures[idx] = LoadTextureFromImage(img);
                         UnloadImage(img);
@@ -628,13 +626,13 @@ public:
     }
     
     void loadCardBackTexture() {
-        // First try to load card back from cards folder
+       
         string backPath = "cards/card_back.png";
         
         if (fs::exists(backPath)) {
             Image img = LoadImage(backPath.c_str());
             if (img.data) {
-                // Resize to match the current card dimensions
+           
                 ImageResize(&img, cw, ch);
                 backTexture = LoadTextureFromImage(img);
                 UnloadImage(img);
@@ -650,18 +648,17 @@ public:
     }
     
     void createFallbackBackTexture() {
-        // Create a simple fallback card back texture
+       
         Image img = GenImageColor(cw, ch, Color{139, 69, 19, 255});
         
-        // Add border
         Rectangle border = {0, 0, (float)cw, (float)ch};
         ImageDrawRectangleLines(&img, border, 2, Color{120, 40, 0, 255});
         
-        // Add inner border
+       
         Rectangle innerBorder = {5, 5, (float)(cw - 10), (float)(ch - 10)};
         ImageDrawRectangleLines(&img, innerBorder, 1, Color{120, 40, 0, 255});
         
-        // Add simple pattern
+      
         for (int i = 10; i < cw - 10; i += 15) {
             for (int j = 10; j < ch - 10; j += 15) {
                 ImageDrawCircle(&img, i, j, 3, Color{120, 40, 0, 100});
@@ -673,15 +670,15 @@ public:
     }
     
     void createFallbackCardTexture(int idx, int rank, char suit) {
-        // Create fallback card with proper markings and consistent size
+       
         Image img = GenImageColor(cw, ch, WHITE);
         
-        // Card border
+      
         Rectangle border = {2.0f, 2.0f, (float)(cw - 4), (float)(ch - 4)};
         Color borderColor = (suit == 'H' || suit == 'D') ? RED : BLACK;
         ImageDrawRectangleLines(&img, border, 2, borderColor);
         
-        // Card background with subtle pattern
+       
         for (int i = 0; i < 20; i++) {
             int x = rand() % (cw - 30) + 15;
             int y = rand() % (ch - 30) + 15;
@@ -690,7 +687,7 @@ public:
             ImageDrawPixel(&img, x, y, patternColor);
         }
         
-        // Draw card value and suit in the corners
+        
         string rankSymbol;
         switch(rank) {
             case 1: rankSymbol = "A"; break;
@@ -711,7 +708,6 @@ public:
         
         Color textColor = (suit == 'H' || suit == 'D') ? RED : BLACK;
         
-        // Draw top-left corner
         int textX = 10;
         int textY = 10;
         DrawTextPro(gameFont, rankSymbol.c_str(), 
@@ -722,7 +718,6 @@ public:
                    (Vector2){(float)textX, (float)textY + 25}, 
                    (Vector2){0, 0}, 0, 25, 1.0f, textColor);
         
-        // Draw bottom-right corner (rotated)
         DrawTextPro(gameFont, rankSymbol.c_str(), 
                    (Vector2){(float)(cw - 30), (float)(ch - 40)}, 
                    (Vector2){0, 0}, 180, 20, 1.0f, textColor);
@@ -747,7 +742,7 @@ public:
     Texture2D getTexture(CardItem c) {
         if (!c.is_faceup || c.rank_no == 0) return backTexture;
         
-        // Calculate texture index based on suit and rank
+    
         int suitOffset = 0;
         switch(c.suit) {
             case 'H': suitOffset = 0; break;
@@ -763,39 +758,38 @@ public:
             return cardTextures[textureIndex];
         }
         
-        // Fallback to back texture if not found
+       
         return backTexture;
     }
     
     void drawCard(CardItem c, float x, float y, bool highlight = false, float alpha = 1.0f) {
-        // Draw card background
+        
         if (highlight) {
             DrawRectangle((int)(x - 4), (int)(y - 4), cw + 8, ch + 8, Fade(GOLD, 0.6f));
         }
         
-        // Draw card texture
         if (c.is_faceup && c.rank_no > 0) {
             Texture2D tex = getTexture(c);
             DrawTexture(tex, (int)x, (int)y, Fade(WHITE, alpha));
             
-            // Only draw text markings if we're using fallback textures
+            
             if (!cardsLoaded) {
                 Color col = c.check_red() ? RED : BLACK;
                 
-                // Top-left rank and suit
+                
                 string rankSymbol = c.getRankSymbol();
                 string suitSymbol = c.getSuitSymbol();
                 
-                // Draw top-left corner
+             
                 DrawText(rankSymbol.c_str(), (int)x + 8, (int)y + 8, 20, col);
                 DrawText(suitSymbol.c_str(), (int)x + 8, (int)y + 30, 24, col);
                 
-                // Draw bottom-right corner (rotated)
+              
                 DrawText(rankSymbol.c_str(), (int)x + cw - 30, (int)y + ch - 35, 20, col);
                 DrawText(suitSymbol.c_str(), (int)x + cw - 30, (int)y + ch - 55, 24, col);
             }
         } else {
-            // Draw card back
+        
             DrawTexture(backTexture, (int)x, (int)y, Fade(WHITE, alpha));
         }
         
@@ -805,9 +799,9 @@ public:
     }
     
     void save() {
-        // If undo queue is at capacity, remove oldest (implement FIFO with size limit)
+     
         if (undos.gsize() >= 50) {
-            // Remove the front element to make room
+          
             undos.dequeue();
         }
         GameSnapshot s;
@@ -821,10 +815,10 @@ public:
     void undo() {
         if (undos.emptyy()) return;
         
-        // Get the last snapshot (rear of queue)
+        
         GameSnapshot s = undos.peekRear();
         
-        // Remove it from the queue by copying all but the last element
+    
         Queue<GameSnapshot> temp(50);
         int undoSize = undos.gsize();
         for (int i = 0; i < undoSize - 1; i++) {
@@ -841,13 +835,13 @@ public:
     void init() {
         deck.full_deck();
         
-        // Reset all game state
+    
         stock.clearr();
         waste.clearr();
         for (int i = 0; i < 4; i++) found[i].clearr();
         for (int i = 0; i < 7; i++) tabs[i].card_col.clearr();
         
-        // Deal tableau
+        
         for (int c = 0; c < 7; c++) {
             for (int r = 0; r <= c; r++) {
                 CardItem card = deck.draw_card();
@@ -856,10 +850,10 @@ public:
             }
         }
         
-        // Stock
+      
         while (!deck.check_empty()) stock.enqueue(deck.draw_card());
         
-        // Reset game stats
+       
         score = 0;
         moves = 0;
         won = false;
@@ -868,7 +862,7 @@ public:
         save();
         updateRects();
         
-        // Add to statistics
+      
         statistics.gamesPlayed++;
     }
     
@@ -890,22 +884,22 @@ public:
     
     void drawStock() {
         if (!stock.emptyy()) {
-            save();  // Save state before making the move
+            save();  
             
             if (currentDifficulty == EASY) {
-                // 1-card draw
+              
                 CardItem c = stock.dequeue();
                 c.is_faceup = true;
                 waste.enqueue(c);
                 moves++;
-                // According to the rules: No points for drawing cards from stock
+               
                 addAnimation(stockRect.x, stockRect.y, wasteRect.x, wasteRect.y, c);
             } else {
-                // 3-card draw for MEDIUM and HARD
+               
                 int cardsToDraw = 3;
                 int cardsDrawn = 0;
                 
-                // Store cards to animate the last one
+              
                 CardItem lastCard;
                 
                 while (!stock.emptyy() && cardsDrawn < cardsToDraw) {
@@ -913,66 +907,62 @@ public:
                     c.is_faceup = true;
                     waste.enqueue(c);
                     cardsDrawn++;
-                    lastCard = c; // Keep track of the last card
+                    lastCard = c; 
                 }
                 
                 moves++;
                 
-                // Animate only the last card drawn for better visual
+               
                 if (cardsDrawn > 0) {
                     addAnimation(stockRect.x, stockRect.y, wasteRect.x, wasteRect.y, lastCard);
                 }
             }
         } else if (!waste.emptyy()) {
-            // Only recycle when stock is empty AND waste has cards
+          
             recycleWaste();
         }
     }
     
     void recycleWaste() {
-        // Check if recycling is allowed for HARD difficulty
+     
         if (currentDifficulty == HARD && recycleCount >= maxRecycles) {
-            // Cannot recycle anymore in HARD mode
-            // You might want to add a visual indicator here
+        
             return;
         }
         
         save();
         
-        // First, move all waste cards to stock
         int wasteSize = waste.gsize();
         if (wasteSize > 0) {
-            // Create a temporary array to hold waste cards
+           
             CardItem* tempArr = new CardItem[wasteSize];
             
-            // Store all waste cards in array (front to back)
+           
             for (int i = 0; i < wasteSize; i++) {
                 tempArr[i] = waste.valueat(i);
             }
             
-            // Clear the waste pile
+         
             waste.clearr();
             
-            // Add cards back to stock in reverse order (to maintain original order)
-            // When recycled, cards go face-down to stock
+         
             for (int i = 0; i < wasteSize; i++) {
                 CardItem c = tempArr[i];
-                c.is_faceup = false;  // Cards go back to stock face-down
+                c.is_faceup = false;  
                 stock.enqueue(c);
             }
             
             delete[] tempArr;
             
             moves++;
-            // According to the rules: -100 points for recycling waste pile
+           
             score -= 100;
-            // Ensure score doesn't go below 0
+           
             if (score < 0) score = 0;
             recycleCount++;
-            
-            // Add animation to show recycling
+          
             addAnimation(wasteRect.x, wasteRect.y, stockRect.x, stockRect.y, 
-                        CardItem(0, ' ', false)); // Use a dummy card for animation
+                        CardItem(0, ' ', false)); 
         }
     }
     
@@ -1003,7 +993,7 @@ public:
     }
     
     void updateAnimations(float dt) {
-        // Update card animations
+       
         Queue<CardAnimation> tempAnims(100);
         int animSize = anims.gsize();
         for (int i = 0; i < animSize; i++) {
@@ -1015,7 +1005,7 @@ public:
         }
         anims = tempAnims;
         
-        // Update particles
+       
         Queue<Particle> tempParticles(200);
         int particleSize = particles.gsize();
         for (int i = 0; i < particleSize; i++) {
@@ -1064,25 +1054,24 @@ public:
         CardItem movedCard;
         
         if (source == 0) {
-            // Get the actual card from waste
+           
             movedCard = waste.peekRear();
-            if (movedCard.rank_no == 0) return false; // Safety check
+            if (movedCard.rank_no == 0) return false; 
             
-            // Remove from waste using a simpler approach
+          
             Queue<CardItem> newWaste(24);
             int wasteSize = waste.gsize();
             
             if (wasteSize == 0) return false;
             
-            // Copy all cards except the last one
+          
             for (int i = 0; i < wasteSize - 1; i++) {
                 newWaste.enqueue(waste.valueat(i));
             }
-            
-            // The last card is the one we're moving
+         
             movedCard = waste.valueat(wasteSize - 1);
             
-            // Replace waste with new queue
+        
             waste = newWaste;
             
             sx = wasteRect.x; sy = wasteRect.y;
@@ -1091,7 +1080,7 @@ public:
             
             if (!tabs[source - 1].check_emp() && !tabs[source - 1].get_tcard().is_faceup) {
                 tabs[source - 1].flip_top();
-                // According to rules: +5 points for revealing (turning over) a face-down card
+               
                 score += 5;
             }
             
@@ -1102,12 +1091,11 @@ public:
         found[fi].enqueue(movedCard);
         moves++;
         
-        // According to rules: +10 points for moving card to foundation
         if (source == 0) {
-            // Moving from waste to foundation: +10 points
+         
             score += 10;
         } else {
-            // Moving from tableau to foundation: +10 points
+       
             score += 10;
         }
         
@@ -1142,27 +1130,26 @@ public:
         
         save();
         
-        // Get all cards from the starting index
-        Queue<CardItem> cardsToMove = tabs[from - 1].get_cards_from(startIdx);
-        int numCardsMoved = cardsToMove.gsize(); // Count how many cards are being moved
         
-        // Add them to the destination
+        Queue<CardItem> cardsToMove = tabs[from - 1].get_cards_from(startIdx);
+        int numCardsMoved = cardsToMove.gsize(); 
+        
+
         while (!cardsToMove.emptyy()) {
             tabs[to - 1].add_card(cardsToMove.dequeue());
         }
         
-        // Remove them from source
+   
         tabs[from - 1].remove_from(startIdx);
         
         if (!tabs[from - 1].check_emp() && !tabs[from - 1].get_tcard().is_faceup) {
             tabs[from - 1].flip_top();
-            // According to rules: +5 points for revealing (turning over) a face-down card
+        
             score += 5;
         }
         
         moves++;
-        // According to rules: No points awarded for moving cards between tableau piles
-        // (The table in the image doesn't show any points for this action)
+     
         return true;
     }
     
@@ -1183,43 +1170,42 @@ public:
         
         save();
         
-        // Get the actual card from waste
+     
         CardItem movedCard;
         Queue<CardItem> newWaste(24);
         int wasteSize = waste.gsize();
         
         if (wasteSize == 0) return false;
         
-        // Move all cards except the last one to newWaste
+    
         for (int i = 0; i < wasteSize - 1; i++) {
             newWaste.enqueue(waste.valueat(i));
         }
-        
-        // Get the last card (the one we're moving)
+     
         movedCard = waste.valueat(wasteSize - 1);
         
-        // Replace waste with new queue
+       
         waste = newWaste;
         
         tabs[to - 1].add_card(movedCard);
         
         moves++;
-        // According to rules: +5 points for moving card from waste to tableau
+       
         score += 5;
         return true;
     }
     
-    // Button drawing function
+   
     void drawButton(Button& button, float fontSize = 24.0f) {
         Color btnColor = button.hovered ? button.hoverColor : button.color;
         
-        // Draw button background with rounded corners
+      
         DrawRectangleRounded(button.rect, 0.3f, 10, btnColor);
         
-        // Draw button border
+   
         DrawRectangleLinesEx(button.rect, 2.0f, WHITE);
         
-        // Draw button text
+     
         int textWidth = MeasureText(button.text.c_str(), fontSize);
         DrawText(button.text.c_str(), 
                 button.rect.x + button.rect.width/2 - textWidth/2,
@@ -1227,7 +1213,7 @@ public:
                 fontSize, WHITE);
     }
     
-    // Update button hover state
+  
     void updateButtonHover(Queue<Button>& buttons, Vector2 mousePos) {
         Queue<Button> tempButtons(buttons.gsize());
         int buttonSize = buttons.gsize();
@@ -1239,34 +1225,33 @@ public:
         buttons = tempButtons;
     }
     
-    // Render level selection screen
     void renderLevelSelect() {
-        // Dark blue gradient background
+       
         DrawRectangleGradientV(0, 0, GetScreenWidth(), GetScreenHeight(), 
                                Color{20, 40, 80, 255}, Color{10, 20, 40, 255});
         
-        // Draw title with shadow effect
+       
         int screenWidth = GetScreenWidth();
         
-        // Main title
+     
         DrawText("KLONDIKE SOLITAIRE", screenWidth/2 - MeasureText("KLONDIKE SOLITAIRE", 60)/2, 80, 60, GOLD);
         DrawText("SELECT DIFFICULTY", screenWidth/2 - MeasureText("SELECT DIFFICULTY", 48)/2, 160, 48, SKYBLUE);
         
-        // Draw decorative line under title
+       
         DrawLine(screenWidth/2 - 150, 230, screenWidth/2 + 150, 230, Fade(GOLD, 0.5f));
         
-        // Update button hover states
+    
         Vector2 mousePos = GetMousePosition();
         updateButtonHover(levelButtons, mousePos);
         
-        // Draw all level buttons
+    
         int levelButtonSize = levelButtons.gsize();
         for (int i = 0; i < levelButtonSize; i++) {
             Button btn = levelButtons.valueat(i);
             drawButton(btn);
         }
         
-        // Draw difficulty descriptions
+
         int descY = 550;
         DrawText("EASY: Draw 1 card at a time, unlimited recycles", screenWidth/2 - 250, descY, 18, LIGHTGRAY);
         DrawText("MEDIUM: Draw 3 cards at a time, unlimited recycles", screenWidth/2 - 260, descY + 30, 18, LIGHTGRAY);
@@ -1863,8 +1848,8 @@ public:
 } 
 
 
-}
 
+}
 };
 
 
