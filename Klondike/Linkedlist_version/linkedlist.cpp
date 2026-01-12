@@ -3,8 +3,8 @@
 #include <ctime>
 #include <string>
 #include <fstream>
-#include <algorithm>
 #include "raylib.h"
+
 using namespace std;
 
 template <class T>
@@ -13,6 +13,7 @@ struct Node
     T data;
     Node* next;
 };
+
 template <class T>
 class LinkedList
 {
@@ -107,6 +108,23 @@ public:
         return true;
     }
 
+    bool insertAtTail(T n)
+    {
+        Node<T>* newNode = new Node<T>;
+        newNode->data = n;
+        newNode->next = nullptr;
+        if (!head) {
+            head = newNode;
+        }
+        else {
+            Node<T>* temp = head;
+            while (temp->next) temp = temp->next;
+            temp->next = newNode;
+        }
+        count++;
+        return true;
+    }
+
     bool deleteFromHead(T& v)
     {
         if (!isEmpty())
@@ -119,6 +137,23 @@ public:
             return true;
         }
         return false;
+    }
+
+    bool deleteFromTail(T& v)
+    {
+        if (isEmpty()) return false;
+        if (head->next == nullptr) return deleteFromHead(v);
+        Node<T>* prev = nullptr;
+        Node<T>* curr = head;
+        while (curr->next != nullptr) {
+            prev = curr;
+            curr = curr->next;
+        }
+        v = curr->data;
+        delete curr;
+        prev->next = nullptr;
+        count--;
+        return true;
     }
 
     void clear() {
@@ -154,6 +189,7 @@ public:
         clear();
     }
 };
+
 class card
 {
 public:
@@ -162,15 +198,20 @@ public:
     string color;
     bool faceup;
     card() {}
-int getCardImageIndex()
-{
-    return suit * 13 + rankk;
-}
+
+    int getCardImageIndex()
+    {
+        return suit * 13 + rankk;
+    }
+
     ~card() {}
 };
+
 class Deck
 {
 public:
+    LinkedList<card> stock;
+    LinkedList<card> waste;
     LinkedList<card> tableau1;
     LinkedList<card> tableau2;
     LinkedList<card> tableau3;
@@ -178,205 +219,211 @@ public:
     LinkedList<card> tableau5;
     LinkedList<card> tableau6;
     LinkedList<card> tableau7;
-    LinkedList<card> stock;
-    LinkedList<card> waste;
     LinkedList<card> foundation1{ 13 };
     LinkedList<card> foundation2{ 13 };
     LinkedList<card> foundation3{ 13 };
     LinkedList<card> foundation4{ 13 };
+
     Deck() {}
+
     void createdeck()
     {
         card c;
-for (int i = 0; i < 4; i++)
-{
-    for (int j = 1; j < 14; j++)
-    {
-        c.suit = i;
-        c.rankk = j;
-        c.faceup = true;
-        if (i == 0 || i == 1) c.color = "red";
-        else c.color = "black";
-        stock.insertAtHead(c);
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 1; j < 14; j++)
+            {
+                c.suit = i;
+                c.rankk = j;
+                c.faceup = true;
+                if (i == 0 || i == 1) c.color = "red";
+                else c.color = "black";
+                stock.insertAtHead(c);
+            }
+        }
     }
-}
-    }
+
     void shuffledeck()
     {
         srand(time(0));
-card temp[52];
-int index = 0;
-while (!stock.isEmpty() && index < 52)
-{
-    stock.deleteFromHead(temp[index]);
-    index++;
-}
-for (int i = 0; i < 52; i++)
-{
-    int j = rand() % 52;
-    card tempa = temp[i];
-    temp[i] = temp[j];
-    temp[j] = tempa;
-}
-for (int i = 0; i < 52; i++)
-{
-    stock.insertAtHead(temp[i]);
-}
-    }
-    void dealtotableau(LinkedList<card>& tableau, int j)
-{
-    card c;
-    for (int i = 1; i <= j; i++)
-    {
-        stock.deleteFromHead(c);
-        if (i == j) c.faceup = true;
-        else c.faceup = false;
-        tableau.insertAtHead(c);
-    }
-}
-    void dealtableau()
-{
-    dealtotableau(tableau1, 1);
-    dealtotableau(tableau2, 2);
-    dealtotableau(tableau3, 3);
-    dealtotableau(tableau4, 4);
-    dealtotableau(tableau5, 5);
-    dealtotableau(tableau6, 6);
-    dealtotableau(tableau7, 7);
-}
-    void drawtowastee()
-{
-    card c;
-    if (stock.isEmpty())
-    {
-        recyclewastetostock();
-        if (stock.isEmpty()) return;
-    }
-    if (stock.deleteFromHead(c))
-    {
-        c.faceup = true;
-        waste.insertAtHead(c);
-    }
-}
-    void recyclewastetostock()
-{
-    if (waste.isEmpty()) return;
-    card c;
-    LinkedList<card> temp;
-    while (!waste.isEmpty())
-    {
-        waste.deleteFromHead(c);
-        c.faceup = false;
-        temp.insertAtHead(c);
-    }
-    while (!temp.isEmpty())
-    {
-        temp.deleteFromHead(c);
-        stock.insertAtHead(c);
-    }
-}
-bool can_move_to_foundation(LinkedList<card>& foundation, card c)
-{
-    if (foundation.isEmpty()) return c.rankk == 1;
-    card top = foundation.peek();
-    return (top.suit == c.suit && c.rankk == top.rankk + 1);
-}
-
-bool can_move_to_tableau(LinkedList<card>& tableau, card c)
-{
-    if (tableau.isEmpty()) return c.rankk == 13;
-    card top = tableau.peek();
-    return (c.rankk == top.rankk - 1 && c.color != top.color);
-}
-    void flip_tableau_top(LinkedList<card>& tableau)
-{
-    if (!tableau.isEmpty())
-    {
-        card top = tableau.peek();
-        if (!top.faceup)
+        card temp[52];
+        int index = 0;
+        while (!stock.isEmpty() && index < 52)
         {
-            tableau.deleteFromHead(top);
-            top.faceup = true;
-            tableau.insertAtHead(top);
-        }
-    }
-}
+            stock.deleteFromHead(temp[index]);
+            index++;
+        }
+        for (int i = 0; i < 52; i++)
+        {
+            int j = rand() % 52;
+            card tempa = temp[i];
+            temp[i] = temp[j];
+            temp[j] = tempa;
+        }
+        for (int i = 0; i < 52; i++)
+        {
+            stock.insertAtHead(temp[i]);
+        }
+    }
+
+    void dealtotableau(LinkedList<card>& tableau, int j)
+    {
+        card c;
+        for (int i = 1; i <= j; i++)
+        {
+            stock.deleteFromHead(c);
+            if (i == j) c.faceup = true;
+            else c.faceup = false;
+            tableau.insertAtHead(c);
+        }
+    }
+
+    void dealtableau()
+    {
+        dealtotableau(tableau1, 1);
+        dealtotableau(tableau2, 2);
+        dealtotableau(tableau3, 3);
+        dealtotableau(tableau4, 4);
+        dealtotableau(tableau5, 5);
+        dealtotableau(tableau6, 6);
+        dealtotableau(tableau7, 7);
+    }
+
+    void drawtowastee()
+    {
+        card c;
+        if (stock.isEmpty())
+        {
+            recyclewastetostock();
+            return;
+        }
+        if (stock.deleteFromHead(c))
+        {
+            c.faceup = true;
+            waste.insertAtHead(c);
+        }
+    }
+
+    void recyclewastetostock()
+    {
+        if (waste.isEmpty()) return;
+        card c;
+        while (!waste.isEmpty())
+        {
+            waste.deleteFromHead(c);
+            c.faceup = false;
+            stock.insertAtHead(c);
+        }
+    }
+
+    bool can_move_to_foundation(LinkedList<card>& foundation, card c)
+    {
+        if (foundation.isEmpty()) return c.rankk == 1;
+        card top = foundation.peek();
+        return (top.suit == c.suit && c.rankk == top.rankk + 1);
+    }
+
+    bool can_move_to_tableau(LinkedList<card>& tableau, card c)
+    {
+        if (tableau.isEmpty()) return c.rankk == 13;
+        card top = tableau.peek();
+        return (c.rankk == top.rankk - 1 && c.color != top.color);
+    }
+
+    void flip_tableau_top(LinkedList<card>& tableau)
+    {
+        if (!tableau.isEmpty())
+        {
+            card top = tableau.peek();
+            if (!top.faceup)
+            {
+                tableau.deleteFromHead(top);
+                top.faceup = true;
+                tableau.insertAtHead(top);
+            }
+        }
+    }
+
     bool check_win()
     {
         return (foundation1.getCount() == 13 && foundation2.getCount() == 13 &&
-    foundation3.getCount() == 13 && foundation4.getCount() == 13);
+            foundation3.getCount() == 13 && foundation4.getCount() == 13);
     }
+
+    bool hasLegalMoves()
+    {
+        LinkedList<card>* tableaus[] = { &tableau1, &tableau2, &tableau3, &tableau4, &tableau5, &tableau6, &tableau7 };
+        LinkedList<card>* foundations[] = { &foundation1, &foundation2, &foundation3, &foundation4 };
+
+        if (!waste.isEmpty())
+        {
+            card w = waste.peek();
+            for (int i = 0; i < 4; i++) if (can_move_to_foundation(*foundations[i], w)) return true;
+            for (int i = 0; i < 7; i++) if (can_move_to_tableau(*tableaus[i], w)) return true;
+        }
+
+        for (int i = 0; i < 7; i++)
+        {
+            if (tableaus[i]->isEmpty()) continue;
+            Node<card>* curr = tableaus[i]->getHead();
+            while (curr && curr->data.faceup)
+            {
+                card sequenceLead = curr->data;
+                if (curr == tableaus[i]->getHead()) {
+                    for (int f = 0; f < 4; f++) if (can_move_to_foundation(*foundations[f], sequenceLead)) return true;
+                }
+                for (int j = 0; j < 7; j++)
+                {
+                    if (i == j) continue;
+                    if (can_move_to_tableau(*tableaus[j], sequenceLead)) return true;
+                }
+                curr = curr->next;
+            }
+        }
+        return false;
+    }
+
     bool isGameLost()
     {
         return stock.isEmpty() && waste.isEmpty() && !hasLegalMoves() && !check_win();
     }
+
     void move_tableau_to_foundation(LinkedList<card>& tableau)
     {
         if (tableau.isEmpty()) return;
-card c = tableau.peek();
-LinkedList<card>* foundation = nullptr;
-if (c.suit == 0) foundation = &foundation1;
-else if (c.suit == 1) foundation = &foundation2;
-else if (c.suit == 2) foundation = &foundation3;
-else if (c.suit == 3) foundation = &foundation4;
+        card c = tableau.peek();
+        LinkedList<card>* foundation = nullptr;
+        if (c.suit == 0) foundation = &foundation1;
+        else if (c.suit == 1) foundation = &foundation2;
+        else if (c.suit == 2) foundation = &foundation3;
+        else if (c.suit == 3) foundation = &foundation4;
 
-if (foundation && can_move_to_foundation(*foundation, c))
-{
-    tableau.deleteFromHead(c);
-    foundation->insertAtHead(c);
-    flip_tableau_top(tableau);
-}
+        if (foundation && can_move_to_foundation(*foundation, c))
+        {
+            tableau.deleteFromHead(c);
+            foundation->insertAtHead(c);
+            flip_tableau_top(tableau);
+        }
     }
+
     void move_waste_to_foundation()
     {
         if (waste.isEmpty()) return;
-card c = waste.peek();
-LinkedList<card>* foundation = nullptr;
-if (c.suit == 0) foundation = &foundation1;
-else if (c.suit == 1) foundation = &foundation2;
-else if (c.suit == 2) foundation = &foundation3;
-else if (c.suit == 3) foundation = &foundation4;
+        card c = waste.peek();
+        LinkedList<card>* foundation = nullptr;
+        if (c.suit == 0) foundation = &foundation1;
+        else if (c.suit == 1) foundation = &foundation2;
+        else if (c.suit == 2) foundation = &foundation3;
+        else if (c.suit == 3) foundation = &foundation4;
 
-if (foundation && can_move_to_foundation(*foundation, c))
-{
-    waste.deleteFromHead(c);
-    foundation->insertAtHead(c);
-}
-    }
-bool hasLegalMoves()
-{
-    LinkedList<card>* tableaus[] = { &tableau1, &tableau2, &tableau3, &tableau4, &tableau5, &tableau6, &tableau7 };
-    LinkedList<card>* foundations[] = { &foundation1, &foundation2, &foundation3, &foundation4 };
-
-    if (!waste.isEmpty())
-    {
-        card w = waste.peek();
-        for (int i = 0; i < 4; i++) if (can_move_to_foundation(*foundations[i], w)) return true;
-        for (int i = 0; i < 7; i++) if (can_move_to_tableau(*tableaus[i], w)) return true;
-    }
-
-    for (int i = 0; i < 7; i++)
-    {
-        if (tableaus[i]->isEmpty()) continue;
-        Node<card>* curr = tableaus[i]->getHead();
-        while (curr && curr->data.faceup)
+        if (foundation && can_move_to_foundation(*foundation, c))
         {
-            card sequenceLead = curr->data;
-            if (curr == tableaus[i]->getHead()) {
-                for (int f = 0; f < 4; f++) if (can_move_to_foundation(*foundations[f], sequenceLead)) return true;
-            }
-            for (int j = 0; j < 7; j++)
-            {
-                if (i == j) continue;
-                if (can_move_to_tableau(*tableaus[j], sequenceLead)) return true;
-            }
-            curr = curr->next;
+            waste.deleteFromHead(c);
+            foundation->insertAtHead(c);
         }
     }
-    return false;
-}
+};
 
-};    
 struct DeckState {
     LinkedList<card> stock, waste;
     LinkedList<card> t1, t2, t3, t4, t5, t6, t7;
@@ -386,7 +433,11 @@ struct DeckState {
 };
 
 struct Hint {
-    int srcType, srcIdx, destType, destIdx;
+    int srcType;
+    int srcIdx;
+    int destType;
+    int destIdx;
+    int cardCount;
 };
 
 class Game
@@ -394,7 +445,7 @@ class Game
 public:
     const int ORIGINAL_WIDTH = 800;
     const int ORIGINAL_HEIGHT = 600;
-    int screenWidth = 1000;
+    int screenWidth = 1200;
     int screenHeight = 700;
     float scaleX, scaleY, minScale;
 
@@ -422,8 +473,11 @@ public:
     int moveCount = 0;
     int bestMoveCount = -1;
 
-    LinkedList<Hint> activeHints;
-    float hintTimer = 0.0f;
+    bool isHintAnimating = false;
+    Vector2 hintStartPos, hintEndPos;
+    float hintAnimTimer = 0.0f;
+    float stockHighlightTimer = 0.0f;
+    LinkedList<card> hintAnimatedCards;
 
     float remainingSeconds = 0.0f;
     bool timeExpired = false;
@@ -443,96 +497,98 @@ public:
         scaledTableauOffset = 25 * scaleY;
         loadSettings();
     }
-void loadSettings() {
-    ifstream file("settings.txt");
-    if (file.is_open()) {
-        file >> musicOn >> soundsOn;
-        file.close();
+
+    void loadSettings() {
+        ifstream file("settings.txt");
+        if (file.is_open()) {
+            file >> musicOn >> soundsOn;
+            file.close();
+        }
     }
-}
 
-void saveSettings() {
-    ofstream file("settings.txt");
-    if (file.is_open()) {
-        file << musicOn << " " << soundsOn;
-        file.close();
+    void saveSettings() {
+        ofstream file("settings.txt");
+        if (file.is_open()) {
+            file << musicOn << " " << soundsOn;
+            file.close();
+        }
     }
-}
 
-void saveStateForUndo() {
-    DeckState ds;
-    ds.stock = game.stock; ds.waste = game.waste;
-    ds.t1 = game.tableau1; ds.t2 = game.tableau2; ds.t3 = game.tableau3;
-    ds.t4 = game.tableau4; ds.t5 = game.tableau5; ds.t6 = game.tableau6; ds.t7 = game.tableau7;
-    ds.f1 = game.foundation1; ds.f2 = game.foundation2; ds.f3 = game.foundation3; ds.f4 = game.foundation4;
-    ds.moves = moveCount; ds.hints = remainingHints; ds.time = remainingSeconds;
-    undoStack.insertAtHead(ds);
-    if (undoStack.getCount() > 4) {
-        DeckState dummy;
-        undoStack.deleteFromTail(dummy);
+    void saveStateForUndo() {
+        DeckState ds;
+        ds.stock = game.stock; ds.waste = game.waste;
+        ds.t1 = game.tableau1; ds.t2 = game.tableau2; ds.t3 = game.tableau3;
+        ds.t4 = game.tableau4; ds.t5 = game.tableau5; ds.t6 = game.tableau6; ds.t7 = game.tableau7;
+        ds.f1 = game.foundation1; ds.f2 = game.foundation2; ds.f3 = game.foundation3; ds.f4 = game.foundation4;
+       
+        undoStack.insertAtHead(ds);
+        if (undoStack.getCount() > 4) {
+            DeckState dummy;
+            undoStack.deleteFromTail(dummy);
+        }
     }
-}
 
-void performUndo() {
-    if (undoStack.isEmpty()) return;
-    DeckState ds;
-    undoStack.deleteFromHead(ds);
-    game.stock = ds.stock; game.waste = ds.waste;
-    game.tableau1 = ds.t1; game.tableau2 = ds.t2; game.tableau3 = ds.t3;
-    game.tableau4 = ds.t4; game.tableau5 = ds.t5; game.tableau6 = ds.t6; game.tableau7 = ds.t7;
-    game.foundation1 = ds.f1; game.foundation2 = ds.f2; game.foundation3 = ds.f3; game.foundation4 = ds.f4;
-    moveCount = ds.moves; remainingHints = ds.hints; remainingSeconds = ds.time;
-    if (soundsOn) PlaySound(click);
-}
-
-void loadAssets()
-{
-    Image bgImg = FileExists("bg.png") ? LoadImage("bg.png") : GenImageColor(screenWidth, screenHeight, DARKGREEN);
-    ImageResize(&bgImg, screenWidth, screenHeight);
-    background = LoadTextureFromImage(bgImg); UnloadImage(bgImg);
-
-    Image backImg = FileExists("back.png") ? LoadImage("back.png") : GenImageColor(BASE_CARD_WIDTH, BASE_CARD_HEIGHT, BLUE);
-    ImageResize(&backImg, (int)scaledCardWidth, (int)scaledCardHeight);
-    cardBack = LoadTextureFromImage(backImg); UnloadImage(backImg);
-
-    for (int i = 1; i <= 52; i++) {
-        string fn = to_string(i) + ".png";
-        Image cImg = FileExists(fn.c_str()) ? LoadImage(fn.c_str()) : GenImageColor(BASE_CARD_WIDTH, BASE_CARD_HEIGHT, WHITE);
-        ImageResize(&cImg, (int)scaledCardWidth, (int)scaledCardHeight);
-        cardTextures[i] = LoadTextureFromImage(cImg); UnloadImage(cImg);
+    void performUndo() {
+        if (undoStack.isEmpty()) return;
+        DeckState ds;
+        undoStack.deleteFromHead(ds);
+        game.stock = ds.stock; game.waste = ds.waste;
+        game.tableau1 = ds.t1; game.tableau2 = ds.t2; game.tableau3 = ds.t3;
+        game.tableau4 = ds.t4; game.tableau5 = ds.t5; game.tableau6 = ds.t6; game.tableau7 = ds.t7;
+        game.foundation1 = ds.f1; game.foundation2 = ds.f2; game.foundation3 = ds.f3; game.foundation4 = ds.f4;
+  
+        if (soundsOn) PlaySound(click);
     }
-    InitAudioDevice();
-    cardFlip = LoadSound("card_flip.wav");
-    cardPlace = LoadSound("card_place.wav");
-    cardSlide = LoadSound("card_slide.wav");
-    click = LoadSound("click.wav");
-    hintSnd = LoadSound("hint.wav");
-    winSnd = LoadSound("win.wav");
-    lossSnd = LoadSound("lose.wav");
-    bgm = LoadMusicStream("background_music.mp3");
-    if (musicOn) PlayMusicStream(bgm);
-    SetMusicVolume(bgm, 0.4f);
-}
 
-void unloadAssets()
-{
-    UnloadTexture(background); UnloadTexture(cardBack);
-    for (int i = 1; i <= 52; i++) UnloadTexture(cardTextures[i]);
-    UnloadSound(cardFlip); UnloadSound(cardPlace); UnloadSound(cardSlide);
-    UnloadSound(click); UnloadSound(hintSnd); UnloadSound(winSnd); UnloadSound(lossSnd);
-    UnloadMusicStream(bgm); CloseAudioDevice();
-}
+    void loadAssets()
+    {
+        Image bgImg = FileExists("14646.png") ? LoadImage("14646.png") : GenImageColor(screenWidth, screenHeight, DARKGREEN);
+        ImageResize(&bgImg, screenWidth, screenHeight);
+        background = LoadTextureFromImage(bgImg); UnloadImage(bgImg);
 
-void serializePile(ofstream& file, string label, LinkedList<card>& pile) {
-    file << label << " " << pile.getCount() << "\n";
-    Node<card>* curr = pile.getHead();
-    while (curr) {
-        file << curr->data.suit << " " << curr->data.rankk << " "
-            << curr->data.color << " " << curr->data.faceup << "\n";
-        curr = curr->next;
+        Image backImg = FileExists("back2.png") ? LoadImage("back2.png") : GenImageColor(BASE_CARD_WIDTH, BASE_CARD_HEIGHT, BLUE);
+        ImageResize(&backImg, (int)scaledCardWidth, (int)scaledCardHeight);
+        cardBack = LoadTextureFromImage(backImg); UnloadImage(backImg);
+
+        for (int i = 1; i <= 52; i++) {
+            string fn = to_string(i) + ".png";
+            Image cImg = FileExists(fn.c_str()) ? LoadImage(fn.c_str()) : GenImageColor(BASE_CARD_WIDTH, BASE_CARD_HEIGHT, WHITE);
+            ImageResize(&cImg, (int)scaledCardWidth, (int)scaledCardHeight);
+            cardTextures[i] = LoadTextureFromImage(cImg); UnloadImage(cImg);
+        }
+        InitAudioDevice();
+        cardFlip = LoadSound("card_flip.wav");
+        cardPlace = LoadSound("ctdd.mp3");
+        cardSlide = LoadSound("card_slide.wav");
+        click = LoadSound("click.wav");
+        hintSnd = LoadSound("hint.wav");
+        winSnd = LoadSound("win.wav");
+        lossSnd = LoadSound("lose.wav");
+        bgm = LoadMusicStream("horror.mp3");
+        if (musicOn) PlayMusicStream(bgm);
+        SetMusicVolume(bgm, 0.4f);
     }
-}
- void saveGameState() {
+
+    void unloadAssets()
+    {
+        UnloadTexture(background); UnloadTexture(cardBack);
+        for (int i = 1; i <= 52; i++) UnloadTexture(cardTextures[i]);
+        UnloadSound(cardFlip); UnloadSound(cardPlace); UnloadSound(cardSlide);
+        UnloadSound(click); UnloadSound(hintSnd); UnloadSound(winSnd); UnloadSound(lossSnd);
+        UnloadMusicStream(bgm); CloseAudioDevice();
+    }
+
+    void serializePile(ofstream& file, string label, LinkedList<card>& pile) {
+        file << label << " " << pile.getCount() << "\n";
+        Node<card>* curr = pile.getHead();
+        while (curr) {
+            file << curr->data.suit << " " << curr->data.rankk << " "
+                << curr->data.color << " " << curr->data.faceup << "\n";
+            curr = curr->next;
+        }
+    }
+
+    void saveGameState() {
         ofstream file("solitaire_save.txt");
         if (file.is_open()) {
             file << moveCount << " " << difficultyStr << " " << remainingSeconds << "\n";
@@ -552,7 +608,7 @@ void serializePile(ofstream& file, string label, LinkedList<card>& pile) {
             file.close();
         }
     }
-   
+
     void deserializePile(ifstream& file, LinkedList<card>& pile) {
         string label; int count;
         file >> label >> count;
@@ -565,7 +621,7 @@ void serializePile(ofstream& file, string label, LinkedList<card>& pile) {
             pile.insertAtTail(c);
         }
     }
-    
+
     bool loadGameState() {
         ifstream file("solitaire_save.txt");
         if (file.is_open()) {
@@ -610,389 +666,454 @@ void serializePile(ofstream& file, string label, LinkedList<card>& pile) {
             if (file.is_open()) { file << moveCount; file.close(); bestMoveCount = moveCount; }
         }
     }
-void setDifficulty(string diff) {
-    difficultyStr = diff;
-    timeExpired = false;
-    if (diff == "Easy") { remainingHints = 3; hintsPerUse = 3; remainingSeconds = 1200.0f; }
-    else if (diff == "Medium") { remainingHints = 2; hintsPerUse = 2; remainingSeconds = 900.0f; }
-    else { remainingHints = 1; hintsPerUse = 1; remainingSeconds = 480.0f; }
-    moveCount = 0;
-    loadBestScore(diff);
-    game = Deck(); game.createdeck(); game.shuffledeck(); game.dealtableau();
-    saveGameState();
-    undoStack.clear();
-    state = PLAYING;
-}
-void provideHint() {
-    if (remainingHints <= 0 || isHintAnimating) return;
 
-    Hint possible[100];
-    int possibleCount = 0;
-    LinkedList<card>* t[] = { &game.tableau1, &game.tableau2, &game.tableau3, &game.tableau4, &game.tableau5, &game.tableau6, &game.tableau7 };
-    LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
-
-    if (!game.waste.isEmpty()) {
-        card w = game.waste.peek();
-        for (int i = 0; i < 4; i++) if (game.can_move_to_foundation(*f[i], w)) possible[possibleCount++] = { 0, 0, 2, i, 1 };
-        for (int i = 0; i < 7; i++) if (game.can_move_to_tableau(*t[i], w)) possible[possibleCount++] = { 0, 0, 1, i, 1 };
+    void setDifficulty(string diff) {
+        difficultyStr = diff;
+        timeExpired = false;
+        if (diff == "Easy") { remainingHints = 3; hintsPerUse = 3; remainingSeconds = 1200.0f; }
+        else if (diff == "Medium") { remainingHints = 2; hintsPerUse = 2; remainingSeconds = 900.0f; }
+        else { remainingHints = 1; hintsPerUse = 1; remainingSeconds = 480.0f; }
+        moveCount = 0;
+        loadBestScore(diff);
+        game = Deck(); game.createdeck(); game.shuffledeck(); game.dealtableau();
+        saveGameState();
+        undoStack.clear();
+        state = PLAYING;
     }
 
-    for (int i = 0; i < 7; i++) {
-        if (t[i]->isEmpty()) continue;
-        Node<card>* curr = t[i]->getHead();
-        int currentDepth = 1;
-        while (curr && curr->data.faceup) {
-            if (curr == t[i]->getHead()) {
-                for (int j = 0; j < 4; j++) if (game.can_move_to_foundation(*f[j], curr->data)) possible[possibleCount++] = { 1, i, 2, j, 1 };
-            }
-            for (int j = 0; j < 7; j++) if (i != j && game.can_move_to_tableau(*t[j], curr->data)) possible[possibleCount++] = { 1, i, 1, j, currentDepth };
-            curr = curr->next;
-            currentDepth++;
-        }
-    }
+    void provideHint() {
+        if (remainingHints <= 0 || isHintAnimating) return;
 
-    if (possibleCount == 0) {
-        if (!game.stock.isEmpty() || !game.waste.isEmpty()) {
-            stockHighlightTimer = 5.0f;
-            remainingHints--;
-            if (soundsOn) PlaySound(hintSnd);
-        }
-        return;
-    }
-
-    Hint h = possible[rand() % possibleCount];
-    hintAnimatedCards.clear();
-
-    hintStartPos.x = (h.srcType == 0) ? 150 * scaleX : (50 + h.srcIdx * 100) * scaleX;
-    hintEndPos.x = (h.destType == 2) ? (350 + h.destIdx * 100) * scaleX : (50 + h.destIdx * 100) * scaleX;
-
-    if (h.srcType == 0) {
-        hintStartPos.y = 30 * scaleY;
-        hintAnimatedCards.insertAtHead(game.waste.peek());
-    }
-    else {
-        int totalCount = t[h.srcIdx]->getCount();
-        hintStartPos.y = (180 * scaleY) + (totalCount - h.cardCount) * scaledTableauOffset;
-        Node<card>* node = t[h.srcIdx]->getHead();
-        for (int k = 0; k < h.cardCount; k++) {
-            hintAnimatedCards.insertAtTail(node->data);
-            node = node->next;
-        }
-    }
-
-    if (h.destType == 2) hintEndPos.y = 30 * scaleY;
-    else {
-        int destCount = t[h.destIdx]->getCount();
-        hintEndPos.y = (180 * scaleY) + (destCount == 0 ? 0 : (destCount - 1) * scaledTableauOffset);
-    }
-
-    isHintAnimating = true;
-    hintAnimTimer = 2.0f;
-    remainingHints--;
-    if (soundsOn) PlaySound(hintSnd);
-}
-void drawCard(card c, float x, float y) {
-    if (!c.faceup) DrawTexture(cardBack, (int)x, (int)y, WHITE);
-    else DrawTexture(cardTextures[c.getCardImageIndex()], (int)x, (int)y, WHITE);
-}
-
-void drawPile(LinkedList<card>& pile, float x, float y, float offset = 0) {
-    if (pile.isEmpty()) { DrawRectangleLines((int)x, (int)y, (int)scaledCardWidth, (int)scaledCardHeight, Fade(WHITE, 0.6f)); return; }
-    LinkedList<card> temp;
-    Node<card>* curr = pile.getHead();
-    while (curr) { temp.insertAtHead(curr->data); curr = curr->next; }
-    curr = temp.getHead();
-    int i = 0;
-    while (curr) { drawCard(curr->data, x, y + i * offset); curr = curr->next; i++; }
-}
-
-bool drawButton(Rectangle rect, const char* text, Color color) {
-    bool hovered = CheckCollisionPointRec(GetMousePosition(), rect);
-    DrawRectangleRec(rect, hovered ? ColorBrightness(color, 0.2f) : color);
-    DrawRectangleLinesEx(rect, 2, hovered ? WHITE : GRAY);
-    int fontSize = (int)(20 * minScale);
-    int textW = MeasureText(text, fontSize);
-    DrawText(text, (int)(rect.x + (rect.width - textW) / 2), (int)(rect.y + (rect.height - fontSize) / 2), fontSize, RAYWHITE);
-    return hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
-}
-void drawUI() {
-    if (state == MAIN_MENU) {
-        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.8f));
-        DrawText("KLONDIKE SOLITAIRE", (int)(240 * scaleX), (int)(100 * scaleY), (int)(35 * minScale), GOLD);
-        if (drawButton({ 300 * scaleX, 180 * scaleY, 200 * scaleX, 50 * scaleY }, "New Game", DARKBLUE)) state = DIFF_SELECT;
-        bool saveExists = FileExists("solitaire_save.txt");
-        if (drawButton({ 300 * scaleX, 250 * scaleY, 200 * scaleX, 50 * scaleY }, "Continue Game", saveExists ? DARKGREEN : GRAY)) {
-            if (saveExists) { if (loadGameState()) state = PLAYING; }
-        }
-        if (drawButton({ 300 * scaleX, 320 * scaleY, 200 * scaleX, 50 * scaleY }, "Instructions", MAROON)) state = INSTRUCTIONS;
-        if (drawButton({ 300 * scaleX, 390 * scaleY, 200 * scaleX, 50 * scaleY }, "Settings", DARKPURPLE)) state = SETTINGS;
-        DrawText("Press ESC to exit.", (int)(250 * scaleX), (int)(460 * scaleY), (int)(30 * minScale), RAYWHITE);
-    }
-    else if (state == SETTINGS) {
-        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.9f));
-        DrawText("SETTINGS", (int)(320 * scaleX), (int)(150 * scaleY), (int)(35 * minScale), GOLD);
-        if (drawButton({ 300 * scaleX, 230 * scaleY, 200 * scaleX, 50 * scaleY }, musicOn ? "Music: ON" : "Music: OFF", musicOn ? GREEN : RED)) {
-            musicOn = !musicOn;
-            if (musicOn) PlayMusicStream(bgm); else StopMusicStream(bgm);
-            saveSettings();
-        }
-        if (drawButton({ 300 * scaleX, 300 * scaleY, 200 * scaleX, 50 * scaleY }, soundsOn ? "Sounds: ON" : "Sounds: OFF", soundsOn ? GREEN : RED)) {
-            soundsOn = !soundsOn;
-            saveSettings();
-        }
-        if (drawButton({ 300 * scaleX, 400 * scaleY, 200 * scaleX, 50 * scaleY }, "Back", GRAY)) state = MAIN_MENU;
-    }
-    else if (state == DIFF_SELECT) {
-        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.8f));
-        DrawText("SELECT DIFFICULTY", (int)(250 * scaleX), (int)(150 * scaleY), (int)(30 * minScale), RAYWHITE);
-        if (drawButton({ 300 * scaleX, 230 * scaleY, 200 * scaleX, 50 * scaleY }, "Easy", GREEN)) setDifficulty("Easy");
-        if (drawButton({ 300 * scaleX, 300 * scaleY, 200 * scaleX, 50 * scaleY }, "Medium", BLUE)) setDifficulty("Medium");
-        if (drawButton({ 300 * scaleX, 370 * scaleY, 200 * scaleX, 50 * scaleY }, "Hard", RED)) setDifficulty("Hard");
-        if (drawButton({ 300 * scaleX, 480 * scaleY, 200 * scaleX, 50 * scaleY }, "Back", GRAY)) state = MAIN_MENU;
-    }
-    else if (state == INSTRUCTIONS) {
-        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.9f));
-        DrawText("HOW TO PLAY", (int)(300 * scaleX), (int)(80 * scaleY), (int)(30 * minScale), GOLD);
-        DrawText("- Build foundations from Ace to King by suit.", (int)(100 * scaleX), (int)(150 * scaleY), (int)(20 * minScale), RAYWHITE);
-        DrawText("- Build tableaus descending with alternating colors.", (int)(100 * scaleX), (int)(190 * scaleY), (int)(20 * minScale), RAYWHITE);
-        DrawText("- Click the deck to draw cards into the waste pile.", (int)(100 * scaleX), (int)(230 * scaleY), (int)(20 * minScale), RAYWHITE);
-        DrawText("- Move kings to empty tableau spots.", (int)(100 * scaleX), (int)(270 * scaleY), (int)(20 * minScale), RAYWHITE);
-        DrawText("- Right-Click cards to auto-move to foundations.", (int)(100 * scaleX), (int)(310 * scaleY), (int)(20 * minScale), RAYWHITE);
-        DrawText("- H: Hint | U: Undo | R: Restart | ESC: Menu.", (int)(100 * scaleX), (int)(350 * scaleY), (int)(20 * minScale), RAYWHITE);
-        if (drawButton({ 300 * scaleX, 450 * scaleY, 200 * scaleX, 50 * scaleY }, "Back", DARKBLUE)) state = MAIN_MENU;
-    }
-    else {
-        DrawTexture(background, 0, 0, WHITE);
-
-        if (stockHighlightTimer > 0) {
-            stockHighlightTimer -= GetFrameTime();
-            DrawRectangleLinesEx({ 50 * scaleX - 2, 30 * scaleY - 2, scaledCardWidth + 4, scaledCardHeight + 4 }, 3, YELLOW);
-        }
-
-        if (!game.stock.isEmpty()) DrawTexture(cardBack, (int)(50 * scaleX), (int)(30 * scaleY), WHITE);
-        else DrawRectangleLines((int)(50 * scaleX), (int)(30 * scaleY), (int)scaledCardWidth, (int)scaledCardHeight, WHITE);
-        if (!game.waste.isEmpty() && !(isDragging && sourcePileType == 0)) drawCard(game.waste.peek(), 150 * scaleX, 30 * scaleY);
-
-        LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
-        for (int i = 0; i < 4; i++) {
-            float x = (350 + i * 100) * scaleX;
-            if (!f[i]->isEmpty() && !(isDragging && sourcePileType == 2 && sourcePileIndex == i)) drawCard(f[i]->peek(), x, 30 * scaleY);
-            else DrawRectangleLines((int)x, (int)(30 * scaleY), (int)scaledCardWidth, (int)scaledCardHeight, Fade(WHITE, 0.6f));
-        }
-
+        Hint possible[100];
+        int possibleCount = 0;
         LinkedList<card>* t[] = { &game.tableau1, &game.tableau2, &game.tableau3, &game.tableau4, &game.tableau5, &game.tableau6, &game.tableau7 };
+        LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
+
+        if (!game.waste.isEmpty()) {
+            card w = game.waste.peek();
+            for (int i = 0; i < 4; i++) if (game.can_move_to_foundation(*f[i], w)) possible[possibleCount++] = { 0, 0, 2, i, 1 };
+            for (int i = 0; i < 7; i++) if (game.can_move_to_tableau(*t[i], w)) possible[possibleCount++] = { 0, 0, 1, i, 1 };
+        }
+
         for (int i = 0; i < 7; i++) {
-            float x = (50 + i * 100) * scaleX;
-            if (isDragging && sourcePileType == 1 && sourcePileIndex == i) {
-                LinkedList<card> rem; Node<card>* c = t[i]->getHead();
-                while (c) { rem.insertAtHead(c->data); c = c->next; }
-                Node<card>* rc = rem.getHead(); int idx = 0;
-                while (rc) { drawCard(rc->data, x, (180 * scaleY) + idx * scaledTableauOffset); rc = rc->next; idx++; }
-            }
-            else drawPile(*t[i], x, 180 * scaleY, scaledTableauOffset);
-        }
-
-        if (isDragging) {
-            Vector2 m = GetMousePosition();
-            LinkedList<card> tempDisp; Node<card>* c = draggedCards.getHead();
-            while (c) { tempDisp.insertAtHead(c->data); c = c->next; }
-            Node<card>* disp = tempDisp.getHead(); int i = 0;
-            while (disp) { drawCard(disp->data, m.x - dragOffset.x, m.y - dragOffset.y + i * scaledTableauOffset); disp = disp->next; i++; }
-        }
-
-        if (isHintAnimating) {
-            hintAnimTimer -= GetFrameTime();
-            if (hintAnimTimer <= 0) isHintAnimating = false;
-            else {
-                float t_val = (hintAnimTimer > 1.0f) ? (2.0f - hintAnimTimer) : hintAnimTimer;
-                Vector2 currentPos = { Lerp(hintStartPos.x, hintEndPos.x, t_val), Lerp(hintStartPos.y, hintEndPos.y, t_val) };
-
-                Node<card>* node = hintAnimatedCards.getHead();
-                int idx = 0;
-                while (node) {
-                    drawCard(node->data, currentPos.x, currentPos.y + idx * scaledTableauOffset);
-                    node = node->next;
-                    idx++;
+            if (t[i]->isEmpty()) continue;
+            Node<card>* curr = t[i]->getHead();
+            int currentDepth = 1;
+            while (curr && curr->data.faceup) {
+                if (curr == t[i]->getHead()) {
+                    for (int j = 0; j < 4; j++) if (game.can_move_to_foundation(*f[j], curr->data)) possible[possibleCount++] = { 1, i, 2, j, 1 };
                 }
+                for (int j = 0; j < 7; j++) if (i != j && game.can_move_to_tableau(*t[j], curr->data)) possible[possibleCount++] = { 1, i, 1, j, currentDepth };
+                curr = curr->next;
+                currentDepth++;
             }
         }
 
-        int mins = (int)remainingSeconds / 60;
-        int secs = (int)remainingSeconds % 60;
-        int uiFontSize = (int)(20 * minScale);
-        DrawText(TextFormat("Time: %02d:%02d", mins, secs), (int)(150 * scaleX), (int)(570 * scaleY), uiFontSize, (remainingSeconds < 30) ? RED : RAYWHITE);
-        DrawText(TextFormat("Moves: %d", moveCount), (int)(300 * scaleX), (int)(570 * scaleY), uiFontSize, RAYWHITE);
-        if (bestMoveCount != -1) DrawText(TextFormat("Best: %d", bestMoveCount), (int)(400 * scaleX), (int)(570 * scaleY), uiFontSize, GOLD);
-        DrawText(TextFormat("Hints: %d", remainingHints), (int)(500 * scaleX), (int)(570 * scaleY), uiFontSize, RAYWHITE);
-
-        if (drawButton({ 10 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Menu", GRAY)) { saveGameState(); state = MAIN_MENU; }
-        if (drawButton({ 75 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Reset", MAROON)) { saveGameState(); setDifficulty(difficultyStr); }
-        if (drawButton({ 600 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Hint", DARKGREEN)) provideHint();
-        if (drawButton({ 665 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Undo", DARKBLUE)) performUndo();
-        if (drawButton({ 730 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, musicOn ? "Mute" : "Unmute", musicOn ? BLUE : RED)) {
-            musicOn = !musicOn;
-            if (musicOn) PlayMusicStream(bgm); else StopMusicStream(bgm);
-            saveSettings();
-        }
-
-        if (state == WON || state == LOST) {
-            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.7f));
-            const char* lostMsg = timeExpired ? "Time's Up! GAME OVER" : "GAME OVER";
-            DrawText(state == WON ? "YOU WIN!" : lostMsg, (int)(240 * scaleX), (int)(250 * scaleY), (int)(40 * minScale), state == WON ? GOLD : RED);
-            DrawText(TextFormat("Final Moves: %d", moveCount), (int)(320 * scaleX), (int)(310 * scaleY), (int)(20 * minScale), RAYWHITE);
-            if (drawButton({ 300 * scaleX, 360 * scaleY, 200 * scaleX, 50 * scaleY }, "Menu", DARKBLUE)) state = MAIN_MENU;
-        }
-    }
-}
-void handleInput() {
-    if (IsKeyPressed(KEY_ESCAPE)) {
-        if (state == PLAYING) { saveGameState(); state = MAIN_MENU; return; }
-        if (state == DIFF_SELECT || state == INSTRUCTIONS || state == SETTINGS) { state = MAIN_MENU; return; }
-    }
-
-    if (state != PLAYING) return;
-
-    remainingSeconds -= GetFrameTime();
-    if (remainingSeconds <= 0) {
-        remainingSeconds = 0;
-        timeExpired = true;
-        state = LOST;
-        if (soundsOn) PlaySound(lossSnd);
-        return;
-    }
-
-    if (isHintAnimating) return;
-
-    Vector2 mPos = GetMousePosition();
-    LinkedList<card>* t[] = { &game.tableau1, &game.tableau2, &game.tableau3, &game.tableau4, &game.tableau5, &game.tableau6, &game.tableau7 };
-    LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
-
-    if (IsKeyPressed(KEY_H)) provideHint();
-    if (IsKeyPressed(KEY_U)) performUndo();
-
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        if (CheckCollisionPointRec(mPos, { 50 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
-            saveStateForUndo(); game.drawtowastee(); moveCount++; if (soundsOn) PlaySound(click); saveGameState(); return;
-        }
-        if (!game.waste.isEmpty() && CheckCollisionPointRec(mPos, { 150 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
-            saveStateForUndo();
-            card c; game.waste.deleteFromHead(c); draggedCards.insertAtHead(c);
-            isDragging = true; sourcePileType = 0; dragOffset = { mPos.x - 150 * scaleX, mPos.y - 30 * scaleY };
-            if (soundsOn) PlaySound(cardSlide); return;
-        }
-        for (int i = 0; i < 4; i++) {
-            float x = (350 + i * 100) * scaleX;
-            if (!f[i]->isEmpty() && CheckCollisionPointRec(mPos, { x, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
-                saveStateForUndo();
-                card c; f[i]->deleteFromHead(c); draggedCards.insertAtHead(c);
-                isDragging = true; sourcePileType = 2; sourcePileIndex = i;
-                dragOffset = { mPos.x - x, mPos.y - 30 * scaleY }; if (soundsOn) PlaySound(cardSlide); return;
+        if (possibleCount == 0) {
+            if (!game.stock.isEmpty() || !game.waste.isEmpty()) {
+                stockHighlightTimer = 5.0f;
+                remainingHints--;
+                if (soundsOn) PlaySound(hintSnd);
             }
+            return;
         }
-        for (int i = 0; i < 7; i++) {
-            float x = (50 + i * 100) * scaleX;
-            int count = t[i]->getCount();
-            for (int j = 0; j < count; j++) {
-                float cardY = (180 * scaleY) + (count - 1 - j) * scaledTableauOffset;
-                if (CheckCollisionPointRec(mPos, { x, cardY, scaledCardWidth, (j == 0) ? scaledCardHeight : scaledTableauOffset })) {
-                    Node<card>* curr = t[i]->getHead(); for (int k = 0; k < j; k++) curr = curr->next;
-                    if (!curr->data.faceup) break;
-                    bool validSeq = true; Node<card>* check = t[i]->getHead();
-                    for (int k = 0; k < j; k++) {
-                        card c1 = check->data; card c2 = check->next->data;
-                        if (c1.color == c2.color || c1.rankk != c2.rankk - 1) { validSeq = false; break; }
-                        check = check->next;
-                    }
-                    if (!validSeq) break;
-                    saveStateForUndo();
-                    for (int k = 0; k <= j; k++) { card c; t[i]->deleteFromHead(c); draggedCards.insertAtHead(c); }
-                    isDragging = true; sourcePileType = 1; sourcePileIndex = i;
-                    dragOffset = { mPos.x - x, mPos.y - cardY }; if (soundsOn) PlaySound(cardSlide); return;
-                }
-            }
-        }
-    }
 
-    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDragging) {
-        bool moved = false; card bottomCard = draggedCards.peek();
-        if (draggedCards.getCount() == 1) {
-            for (int i = 0; i < 4; i++) {
-                float fX = (350 + i * 100) * scaleX;
-                if (CheckCollisionPointRec(mPos, { fX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
-                    if (game.can_move_to_foundation(*f[i], bottomCard)) {
-                        card c; draggedCards.deleteFromHead(c); f[i]->insertAtHead(c);
-                        moved = true; moveCount++; break;
-                    }
-                }
-            }
-        }
-        if (!moved) {
-            for (int i = 0; i < 7; i++) {
-                float x = (50 + i * 100) * scaleX;
-                float y = (180 * scaleY) + (t[i]->isEmpty() ? 0 : (t[i]->getCount() - 1) * scaledTableauOffset);
-                if (CheckCollisionPointRec(mPos, { x, y, scaledCardWidth, scaledCardHeight * 2 })) {
-                    if (game.can_move_to_tableau(*t[i], bottomCard)) {
-                        card c; while (!draggedCards.isEmpty()) { draggedCards.deleteFromHead(c); t[i]->insertAtHead(c); }
-                        moved = true; moveCount++; break;
-                    }
-                }
-            }
-        }
-        if (!moved) {
-            DeckState dummy; undoStack.deleteFromHead(dummy);
-            card c;
-            while (!draggedCards.isEmpty()) {
-                draggedCards.deleteFromHead(c);
-                if (sourcePileType == 0) game.waste.insertAtHead(c);
-                else if (sourcePileType == 1) t[sourcePileIndex]->insertAtHead(c);
-                else f[sourcePileIndex]->insertAtHead(c);
-            }
-            if (soundsOn) PlaySound(click);
+        Hint h = possible[rand() % possibleCount];
+        hintAnimatedCards.clear();
+
+        hintStartPos.x = (h.srcType == 0) ? 150 * scaleX : (50 + h.srcIdx * 100) * scaleX;
+        hintEndPos.x = (h.destType == 2) ? (350 + h.destIdx * 100) * scaleX : (50 + h.destIdx * 100) * scaleX;
+
+        if (h.srcType == 0) {
+            hintStartPos.y = 30 * scaleY;
+            hintAnimatedCards.insertAtHead(game.waste.peek());
         }
         else {
-            if (sourcePileType == 1) {
-                int prevCount = t[sourcePileIndex]->getCount();
-                game.flip_tableau_top(*t[sourcePileIndex]);
-                if (t[sourcePileIndex]->getCount() == prevCount && soundsOn) PlaySound(cardFlip);
+            int totalCount = t[h.srcIdx]->getCount();
+            hintStartPos.y = (180 * scaleY) + (totalCount - h.cardCount) * scaledTableauOffset;
+            Node<card>* node = t[h.srcIdx]->getHead();
+            for (int k = 0; k < h.cardCount; k++) {
+                hintAnimatedCards.insertAtTail(node->data);
+                node = node->next;
             }
-            if (soundsOn) PlaySound(cardPlace); saveGameState();
         }
-        isDragging = false;
+
+        if (h.destType == 2) hintEndPos.y = 30 * scaleY;
+        else {
+            int destCount = t[h.destIdx]->getCount();
+            hintEndPos.y = (180 * scaleY) + (destCount == 0 ? 0 : (destCount - 1) * scaledTableauOffset);
+        }
+
+        isHintAnimating = true;
+        hintAnimTimer = 2.0f;
+        remainingHints--;
+        if (soundsOn) PlaySound(hintSnd);
     }
 
-    if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
-        if (CheckCollisionPointRec(mPos, { 150 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
-            saveStateForUndo();
-            int before = game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount();
-            game.move_waste_to_foundation();
-            if (game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount() > before) {
-                moveCount++; saveGameState(); if (soundsOn) PlaySound(cardPlace);
-            }
-            else { DeckState dummy; undoStack.deleteFromHead(dummy); }
+    void drawCard(card c, float x, float y) {
+        if (!c.faceup) DrawTexture(cardBack, (int)x, (int)y, WHITE);
+        else DrawTexture(cardTextures[c.getCardImageIndex()], (int)x, (int)y, WHITE);
+    }
+
+    void drawPile(LinkedList<card>& pile, float x, float y, float offset = 0) {
+        if (pile.isEmpty()) { DrawRectangleLines((int)x, (int)y, (int)scaledCardWidth, (int)scaledCardHeight, Fade(WHITE, 0.6f)); return; }
+        LinkedList<card> temp;
+        Node<card>* curr = pile.getHead();
+        while (curr) { temp.insertAtHead(curr->data); curr = curr->next; }
+        curr = temp.getHead();
+        int i = 0;
+        while (curr) { drawCard(curr->data, x, y + i * offset); curr = curr->next; i++; }
+    }
+
+    bool drawButton(Rectangle rect, const char* text, Color color) {
+        bool hovered = CheckCollisionPointRec(GetMousePosition(), rect);
+        DrawRectangleRec(rect, hovered ? ColorBrightness(color, 0.2f) : color);
+        DrawRectangleLinesEx(rect, 2, hovered ? WHITE : GRAY);
+        int fontSize = (int)(20 * minScale);
+        int textW = MeasureText(text, fontSize);
+        DrawText(text, (int)(rect.x + (rect.width - textW) / 2), (int)(rect.y + (rect.height - fontSize) / 2), fontSize, RAYWHITE);
+        return hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    }
+    float Lerp(float start, float end, float amount) {
+        return start + amount * (end - start);
+    }
+    void handleInput() {
+        if (IsKeyPressed(KEY_ESCAPE)) {
+            if (state == PLAYING) { saveGameState(); state = MAIN_MENU; return; }
+            if (state == DIFF_SELECT || state == INSTRUCTIONS || state == SETTINGS) { state = MAIN_MENU; return; }
         }
-        for (int i = 0; i < 7; i++) {
-            float x = (50 + i * 100) * scaleX;
-            float h = t[i]->isEmpty() ? scaledCardHeight : scaledCardHeight + (t[i]->getCount() - 1) * scaledTableauOffset;
-            if (CheckCollisionPointRec(mPos, { x, 180 * scaleY, scaledCardWidth, h })) {
+
+        if (state != PLAYING) return;
+
+        remainingSeconds -= GetFrameTime();
+        if (remainingSeconds <= 0) {
+            remainingSeconds = 0;
+            timeExpired = true;
+            state = LOST;
+            if (soundsOn) PlaySound(lossSnd);
+            return;
+        }
+
+        if (isHintAnimating) return;
+
+        Vector2 mPos = GetMousePosition();
+        LinkedList<card>* t[] = { &game.tableau1, &game.tableau2, &game.tableau3, &game.tableau4, &game.tableau5, &game.tableau6, &game.tableau7 };
+        LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
+
+        if (IsKeyPressed(KEY_H)) provideHint();
+        if (IsKeyPressed(KEY_U)) performUndo();
+
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            if (CheckCollisionPointRec(mPos, { 50 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+                saveStateForUndo(); game.drawtowastee(); moveCount++; if (soundsOn) PlaySound(click); saveGameState(); return;
+            }
+            if (!game.waste.isEmpty() && CheckCollisionPointRec(mPos, { 150 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+                saveStateForUndo();
+                card c; game.waste.deleteFromHead(c); draggedCards.insertAtHead(c);
+                isDragging = true; sourcePileType = 0; dragOffset = { mPos.x - 150 * scaleX, mPos.y - 30 * scaleY };
+                if (soundsOn) PlaySound(cardSlide); return;
+            }
+            for (int i = 0; i < 4; i++) {
+                float x = (350 + i * 100) * scaleX;
+                if (!f[i]->isEmpty() && CheckCollisionPointRec(mPos, { x, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+                    saveStateForUndo();
+                    card c; f[i]->deleteFromHead(c); draggedCards.insertAtHead(c);
+                    isDragging = true; sourcePileType = 2; sourcePileIndex = i;
+                    dragOffset = { mPos.x - x, mPos.y - 30 * scaleY }; if (soundsOn) PlaySound(cardSlide); return;
+                }
+            }
+            for (int i = 0; i < 7; i++) {
+                float x = (50 + i * 100) * scaleX;
+                int count = t[i]->getCount();
+                for (int j = 0; j < count; j++) {
+                    float cardY = (180 * scaleY) + (count - 1 - j) * scaledTableauOffset;
+                    if (CheckCollisionPointRec(mPos, { x, cardY, scaledCardWidth, (j == 0) ? scaledCardHeight : scaledTableauOffset })) {
+                        Node<card>* curr = t[i]->getHead(); for (int k = 0; k < j; k++) curr = curr->next;
+                        if (!curr->data.faceup) break;
+                        bool validSeq = true; Node<card>* check = t[i]->getHead();
+                        for (int k = 0; k < j; k++) {
+                            card c1 = check->data; card c2 = check->next->data;
+                            if (c1.color == c2.color || c1.rankk != c2.rankk - 1) { validSeq = false; break; }
+                            check = check->next;
+                        }
+                        if (!validSeq) break;
+                        saveStateForUndo();
+                        for (int k = 0; k <= j; k++) { card c; t[i]->deleteFromHead(c); draggedCards.insertAtHead(c); }
+                        isDragging = true; sourcePileType = 1; sourcePileIndex = i;
+                        dragOffset = { mPos.x - x, mPos.y - cardY }; if (soundsOn) PlaySound(cardSlide); return;
+                    }
+                }
+            }
+        }
+
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDragging) {
+            bool moved = false; card bottomCard = draggedCards.peek();
+            if (draggedCards.getCount() == 1) {
+                for (int i = 0; i < 4; i++) {
+                    float fX = (350 + i * 100) * scaleX;
+                    if (CheckCollisionPointRec(mPos, { fX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
+                        if (game.can_move_to_foundation(*f[i], bottomCard)) {
+                            card c; draggedCards.deleteFromHead(c); f[i]->insertAtHead(c);
+                            moved = true; moveCount++; break;
+                        }
+                    }
+                }
+            }
+            if (!moved) {
+                for (int i = 0; i < 7; i++) {
+                    float x = (50 + i * 100) * scaleX;
+                    float y = (180 * scaleY) + (t[i]->isEmpty() ? 0 : (t[i]->getCount() - 1) * scaledTableauOffset);
+                    if (CheckCollisionPointRec(mPos, { x, y, scaledCardWidth, scaledCardHeight * 2 })) {
+                        if (game.can_move_to_tableau(*t[i], bottomCard)) {
+                            card c; while (!draggedCards.isEmpty()) { draggedCards.deleteFromHead(c); t[i]->insertAtHead(c); }
+                            moved = true; moveCount++; break;
+                        }
+                    }
+                }
+            }
+            if (!moved) {
+                DeckState dummy; undoStack.deleteFromHead(dummy);
+                card c;
+                while (!draggedCards.isEmpty()) {
+                    draggedCards.deleteFromHead(c);
+                    if (sourcePileType == 0) game.waste.insertAtHead(c);
+                    else if (sourcePileType == 1) t[sourcePileIndex]->insertAtHead(c);
+                    else f[sourcePileIndex]->insertAtHead(c);
+                }
+                if (soundsOn) PlaySound(click);
+            }
+            else {
+                if (sourcePileType == 1) {
+                    int prevCount = t[sourcePileIndex]->getCount();
+                    game.flip_tableau_top(*t[sourcePileIndex]);
+                    if (t[sourcePileIndex]->getCount() == prevCount && soundsOn) PlaySound(cardFlip);
+                }
+                if (soundsOn) PlaySound(cardPlace); saveGameState();
+            }
+            isDragging = false;
+        }
+
+        if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+            if (CheckCollisionPointRec(mPos, { 150 * scaleX, 30 * scaleY, scaledCardWidth, scaledCardHeight })) {
                 saveStateForUndo();
                 int before = game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount();
-                game.move_tableau_to_foundation(*t[i]);
+                game.move_waste_to_foundation();
                 if (game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount() > before) {
                     moveCount++; saveGameState(); if (soundsOn) PlaySound(cardPlace);
                 }
                 else { DeckState dummy; undoStack.deleteFromHead(dummy); }
             }
+            for (int i = 0; i < 7; i++) {
+                float x = (50 + i * 100) * scaleX;
+                float h = t[i]->isEmpty() ? scaledCardHeight : scaledCardHeight + (t[i]->getCount() - 1) * scaledTableauOffset;
+                if (CheckCollisionPointRec(mPos, { x, 180 * scaleY, scaledCardWidth, h })) {
+                    saveStateForUndo();
+                    int before = game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount();
+                    game.move_tableau_to_foundation(*t[i]);
+                    if (game.foundation1.getCount() + game.foundation2.getCount() + game.foundation3.getCount() + game.foundation4.getCount() > before) {
+                        moveCount++; saveGameState(); if (soundsOn) PlaySound(cardPlace);
+                    }
+                    else { DeckState dummy; undoStack.deleteFromHead(dummy); }
+                }
+            }
+        }
+
+        if (!isDragging) {
+            if (game.check_win()) {
+                state = WON;
+                saveBestScore();
+                if (soundsOn) PlaySound(winSnd);
+            }
+            else if (game.isGameLost()) {
+                state = LOST;
+                if (soundsOn) PlaySound(lossSnd);
+            }
         }
     }
-    if (!isDragging) {
-        if (game.check_win()) {
-            state = WON;
-            saveBestScore();
-            if (soundsOn) PlaySound(winSnd);
+
+    void drawUI() {
+        if (state == MAIN_MENU) {
+            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.8f));
+            DrawText("KLONDIKE SOLITAIRE", (int)(240 * scaleX), (int)(100 * scaleY), (int)(35 * minScale), GOLD);
+            if (drawButton({ 300 * scaleX, 180 * scaleY, 200 * scaleX, 50 * scaleY }, "New Game", DARKBLUE)) state = DIFF_SELECT;
+            bool saveExists = FileExists("solitaire_save.txt");
+            if (drawButton({ 300 * scaleX, 250 * scaleY, 200 * scaleX, 50 * scaleY }, "Continue Game", saveExists ? DARKGREEN : GRAY)) {
+                if (saveExists) { if (loadGameState()) state = PLAYING; }
+            }
+            if (drawButton({ 300 * scaleX, 320 * scaleY, 200 * scaleX, 50 * scaleY }, "Instructions", MAROON)) state = INSTRUCTIONS;
+            if (drawButton({ 300 * scaleX, 390 * scaleY, 200 * scaleX, 50 * scaleY }, "Settings", DARKPURPLE)) state = SETTINGS;
+            DrawText("Press ESC to exit.", (int)(250 * scaleX), (int)(460 * scaleY), (int)(30 * minScale), RAYWHITE);
         }
-        else if (game.isGameLost()) {
-            state = LOST;
-            if (soundsOn) PlaySound(lossSnd);
+        else if (state == SETTINGS) {
+            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.9f));
+            DrawText("SETTINGS", (int)(320 * scaleX), (int)(150 * scaleY), (int)(35 * minScale), GOLD);
+            if (drawButton({ 300 * scaleX, 230 * scaleY, 200 * scaleX, 50 * scaleY }, musicOn ? "Music: ON" : "Music: OFF", musicOn ? GREEN : RED)) {
+                musicOn = !musicOn;
+                if (musicOn) PlayMusicStream(bgm); else StopMusicStream(bgm);
+                saveSettings();
+            }
+            if (drawButton({ 300 * scaleX, 300 * scaleY, 200 * scaleX, 50 * scaleY }, soundsOn ? "Sounds: ON" : "Sounds: OFF", soundsOn ? GREEN : RED)) {
+                soundsOn = !soundsOn;
+                saveSettings();
+            }
+            if (drawButton({ 300 * scaleX, 400 * scaleY, 200 * scaleX, 50 * scaleY }, "Back", GRAY)) state = MAIN_MENU;
+        }
+        else if (state == DIFF_SELECT) {
+            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.8f));
+            DrawText("SELECT DIFFICULTY", (int)(250 * scaleX), (int)(150 * scaleY), (int)(30 * minScale), RAYWHITE);
+            if (drawButton({ 300 * scaleX, 230 * scaleY, 200 * scaleX, 50 * scaleY }, "Easy", GREEN)) setDifficulty("Easy");
+            if (drawButton({ 300 * scaleX, 300 * scaleY, 200 * scaleX, 50 * scaleY }, "Medium", BLUE)) setDifficulty("Medium");
+            if (drawButton({ 300 * scaleX, 370 * scaleY, 200 * scaleX, 50 * scaleY }, "Hard", RED)) setDifficulty("Hard");
+            if (drawButton({ 300 * scaleX, 480 * scaleY, 200 * scaleX, 50 * scaleY }, "Back", GRAY)) state = MAIN_MENU;
+        }
+        else if (state == INSTRUCTIONS) {
+            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.92f));
+
+            DrawText("HOW TO PLAY KLONDIKE SOLITAIRE",
+                (int)(220 * scaleX), (int)(60 * scaleY), (int)(32 * minScale), GOLD);
+
+            DrawText("Goal:",
+                (int)(80 * scaleX), (int)(120 * scaleY), (int)(24 * minScale), YELLOW);
+            DrawText("Move all cards to 4 foundations",
+                (int)(100 * scaleX), (int)(150 * scaleY), (int)(19 * minScale), RAYWHITE);
+            DrawText("building up by suit: Ace -> King",
+                (int)(100 * scaleX), (int)(172 * scaleY), (int)(19 * minScale), RAYWHITE);
+
+            DrawText("Rules:",
+                (int)(80 * scaleX), (int)(210 * scaleY), (int)(24 * minScale), YELLOW);
+            DrawText(". Tableau: descending + alternating colors",
+                (int)(100 * scaleX), (int)(240 * scaleY), (int)(18 * minScale), LIGHTGRAY);
+            DrawText(". Only King can go to empty tableau",
+                (int)(100 * scaleX), (int)(262 * scaleY), (int)(18 * minScale), LIGHTGRAY);
+            DrawText(". Foundations: Ace to King by suit",
+                (int)(100 * scaleX), (int)(284 * scaleY), (int)(18 * minScale), LIGHTGRAY);
+
+            DrawText("Controls:",
+                (int)(80 * scaleX), (int)(330 * scaleY), (int)(24 * minScale), YELLOW);
+            DrawText(". Click deck -> draw 1 card",
+                (int)(100 * scaleX), (int)(360 * scaleY), (int)(19 * minScale), RAYWHITE);
+            DrawText(". Drag -> move cards between piles",
+                (int)(100 * scaleX), (int)(382 * scaleY), (int)(19 * minScale), RAYWHITE);
+            DrawText(". Right-click -> auto to foundation",
+                (int)(100 * scaleX), (int)(404 * scaleY), (int)(19 * minScale), RAYWHITE);
+
+            DrawText("Shortcuts:",
+                (int)(80 * scaleX), (int)(450 * scaleY), (int)(24 * minScale), YELLOW);
+            DrawText("H = Hint   U = Undo   R = Restart   ESC = Menu",
+                (int)(100 * scaleX), (int)(480 * scaleY), (int)(19 * minScale), SKYBLUE);
+            if (drawButton({ 300 * scaleX, 540 * scaleY, 200 * scaleX, 50 * scaleY },
+                "Back", DARKBLUE)) {
+                state = MAIN_MENU;
+            }
+        }
+        else {
+            DrawTexture(background, 0, 0, WHITE);
+
+            if (stockHighlightTimer > 0) {
+                stockHighlightTimer -= GetFrameTime();
+                DrawRectangleLinesEx({ 50 * scaleX - 2, 30 * scaleY - 2, scaledCardWidth + 4, scaledCardHeight + 4 }, 3, YELLOW);
+            }
+
+            if (!game.stock.isEmpty()) DrawTexture(cardBack, (int)(50 * scaleX), (int)(30 * scaleY), WHITE);
+            else DrawRectangleLines((int)(50 * scaleX), (int)(30 * scaleY), (int)scaledCardWidth, (int)scaledCardHeight, WHITE);
+            if (!game.waste.isEmpty() && !(isDragging && sourcePileType == 0)) drawCard(game.waste.peek(), 150 * scaleX, 30 * scaleY);
+
+            LinkedList<card>* f[] = { &game.foundation1, &game.foundation2, &game.foundation3, &game.foundation4 };
+            for (int i = 0; i < 4; i++) {
+                float x = (350 + i * 100) * scaleX;
+                if (!f[i]->isEmpty() && !(isDragging && sourcePileType == 2 && sourcePileIndex == i)) drawCard(f[i]->peek(), x, 30 * scaleY);
+                else DrawRectangleLines((int)x, (int)(30 * scaleY), (int)scaledCardWidth, (int)scaledCardHeight, Fade(WHITE, 0.6f));
+            }
+
+            LinkedList<card>* t[] = { &game.tableau1, &game.tableau2, &game.tableau3, &game.tableau4, &game.tableau5, &game.tableau6, &game.tableau7 };
+            for (int i = 0; i < 7; i++) {
+                float x = (50 + i * 100) * scaleX;
+                if (isDragging && sourcePileType == 1 && sourcePileIndex == i) {
+                    LinkedList<card> rem; Node<card>* c = t[i]->getHead();
+                    while (c) { rem.insertAtHead(c->data); c = c->next; }
+                    Node<card>* rc = rem.getHead(); int idx = 0;
+                    while (rc) { drawCard(rc->data, x, (180 * scaleY) + idx * scaledTableauOffset); rc = rc->next; idx++; }
+                }
+                else drawPile(*t[i], x, 180 * scaleY, scaledTableauOffset);
+            }
+
+            if (isDragging) {
+                Vector2 m = GetMousePosition();
+                LinkedList<card> tempDisp; Node<card>* c = draggedCards.getHead();
+                while (c) { tempDisp.insertAtHead(c->data); c = c->next; }
+                Node<card>* disp = tempDisp.getHead(); int i = 0;
+                while (disp) { drawCard(disp->data, m.x - dragOffset.x, m.y - dragOffset.y + i * scaledTableauOffset); disp = disp->next; i++; }
+            }
+
+            if (isHintAnimating) {
+                hintAnimTimer -= GetFrameTime();
+                if (hintAnimTimer <= 0) isHintAnimating = false;
+                else {
+                    float t_val = (hintAnimTimer > 1.0f) ? (2.0f - hintAnimTimer) : hintAnimTimer;
+                    Vector2 currentPos = { Lerp(hintStartPos.x, hintEndPos.x, t_val), Lerp(hintStartPos.y, hintEndPos.y, t_val) };
+
+                    Node<card>* node = hintAnimatedCards.getHead();
+                    int idx = 0;
+                    while (node) {
+                        drawCard(node->data, currentPos.x, currentPos.y + idx * scaledTableauOffset);
+                        node = node->next;
+                        idx++;
+                    }
+                }
+            }
+
+            int mins = (int)remainingSeconds / 60;
+            int secs = (int)remainingSeconds % 60;
+            int uiFontSize = (int)(20 * minScale);
+            DrawText(TextFormat("Time: %02d:%02d", mins, secs), (int)(150 * scaleX), (int)(570 * scaleY), uiFontSize, (remainingSeconds < 30) ? RED : RAYWHITE);
+            DrawText(TextFormat("Moves: %d", moveCount), (int)(300 * scaleX), (int)(570 * scaleY), uiFontSize, RAYWHITE);
+            if (bestMoveCount != -1) DrawText(TextFormat("Best: %d", bestMoveCount), (int)(400 * scaleX), (int)(570 * scaleY), uiFontSize, GOLD);
+            DrawText(TextFormat("Hints: %d", remainingHints), (int)(500 * scaleX), (int)(570 * scaleY), uiFontSize, RAYWHITE);
+
+            if (drawButton({ 10 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Menu", GRAY)) { saveGameState(); state = MAIN_MENU; }
+            if (drawButton({ 75 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Reset", MAROON)) { saveGameState(); setDifficulty(difficultyStr); }
+            if (drawButton({ 600 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Hint", DARKGREEN)) provideHint();
+            if (drawButton({ 665 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, "Undo", DARKBLUE)) performUndo();
+            if (drawButton({ 730 * scaleX, 560 * scaleY, 60 * scaleX, 30 * scaleY }, musicOn ? "Mute" : "Unmute", musicOn ? BLUE : RED)) {
+                musicOn = !musicOn;
+                if (musicOn) PlayMusicStream(bgm); else StopMusicStream(bgm);
+                saveSettings();
+            }
+
+            if (state == WON || state == LOST) {
+                DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.7f));
+                const char* lostMsg = timeExpired ? "Time's Up! GAME OVER" : "GAME OVER";
+                DrawText(state == WON ? "YOU WIN!" : lostMsg, (int)(240 * scaleX), (int)(250 * scaleY), (int)(40 * minScale), state == WON ? GOLD : RED);
+                DrawText(TextFormat("Final Moves: %d", moveCount), (int)(320 * scaleX), (int)(310 * scaleY), (int)(20 * minScale), RAYWHITE);
+                if (drawButton({ 300 * scaleX, 360 * scaleY, 200 * scaleX, 50 * scaleY }, "Menu", DARKBLUE)) state = MAIN_MENU;
+            }
         }
     }
+
+    void start() {
+        InitWindow(screenWidth, screenHeight, "Klondike Solitaire");
+        SetTargetFPS(60);
+        loadAssets();
+        loadBestScore("Easy");
+        while (!WindowShouldClose()) {
+            if (musicOn) UpdateMusicStream(bgm);
+            if (IsKeyPressed(KEY_R)) {
+                saveGameState();
+                setDifficulty(difficultyStr);
+            }
+            handleInput();
+            BeginDrawing();
+            ClearBackground(DARKGREEN);
+            drawUI();
+            EndDrawing();
+        }
+        unloadAssets();
+        CloseWindow();
+    }
+};
+
+int main() {
+    Game g;
+    g.start();
+    return 0;
 }
