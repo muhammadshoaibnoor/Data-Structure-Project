@@ -1275,6 +1275,591 @@ public:
 
 
 
+    void renderHelp() 
+{
+        DrawRectangleGradientV(0, 0, GetScreenWidth(),GetScreenHeight(), 
+                               Color{20,40,80,255}, Color{10,20,40,255});
+        
+        DrawText("RULES & HELP",GetScreenWidth()/2-MeasureText("RULES & HELP", 48)/2,50,48,GOLD);
+        
+        int contentWidth=900;
+        int contentHeight=500;
+        int contentX=GetScreenWidth()/2-contentWidth/2;
+        int contentY=150;
+        int textX=contentX + 40;
+        int textY=contentY + 40;
+        int lineHeight=28;
+        
+        DrawText("KLONDIKE SOLITAIRE RULES", textX, textY, 24, YELLOW); textY += lineHeight + 20;
+        
+        DrawText("OBJECTIVE:", textX, textY, 20, LIME); textY += lineHeight;
+        DrawText("Move all 52 cards to the four foundation piles", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("(one for each suit: Hearts, Diamonds, Spades, Clubs)", textX + 20, textY, 18, WHITE); textY += lineHeight + 10;
+        
+        DrawText("TABLEAU:", textX, textY, 20, LIME); textY += lineHeight;
+        DrawText("• Build down in alternating colors", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• Red on Black or Black on Red", textX + 40, textY, 16, LIGHTGRAY); textY += lineHeight;
+        DrawText("• Only Kings can start empty columns", textX + 20, textY, 18, WHITE); textY += lineHeight + 10;
+        
+        DrawText("FOUNDATIONS:", textX, textY, 20, LIME); textY += lineHeight;
+        DrawText("• Build up in same suit only", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• Start with Aces, end with Kings", textX + 20, textY, 18, WHITE); textY += lineHeight + 10;
+        
+        DrawText("STOCK & WASTE:", textX, textY, 20, LIME); textY += lineHeight;
+        DrawText("• Click stock to draw cards", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• Only top waste card can be played", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• Recycle waste when stock is empty", textX + 20, textY, 18, WHITE); textY += lineHeight + 10;
+
+        DrawText("DIFFICULTY LEVELS:", textX, textY, 20, LIME); textY += lineHeight;
+        DrawText("• EASY: Draw 1 card at a time, unlimited recycles", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• MEDIUM: Draw 3 cards at a time, unlimited recycles", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• HARD: Draw 3 cards, only 3 recycles allowed", textX + 20, textY, 18, WHITE); textY += lineHeight + 10; 
+        
+        DrawText("CONTROLS:", textX, textY, 20, LIME); textY += lineHeight;
+        DrawText("• Drag and drop cards to move them", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• Double-click cards to move to foundation", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• Press H for in-game help", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• Press U to undo moves", textX + 20, textY, 18, WHITE); textY += lineHeight;
+        DrawText("• Press ESC to close help", textX + 20, textY, 18, WHITE); textY += lineHeight;
+         
+        DrawText( " H to close", GetScreenWidth()/2 - 100, GetScreenHeight() - 50, 20, YELLOW);
+}
+    
+    void renderStats() 
+{
+       
+        DrawRectangleGradientV(0, 0,GetScreenWidth(),GetScreenHeight(), Color{20, 40, 80, 255}, Color{10, 20, 40, 255});
+        DrawText("STATISTICS", GetScreenWidth()/2 - MeasureText("STATISTICS", 48)/2,50,48,GOLD);
+        
+        int contentWidth=800;
+        int contentHeight=400;
+        int contentX=GetScreenWidth()/2 - contentWidth/2;
+        int contentY=150;
+        
+        DrawRectangle(contentX, contentY, contentWidth, contentHeight, Fade(Color{30, 30, 30, 255}, 0.8f));
+        DrawRectangleLines(contentX, contentY, contentWidth, contentHeight, GOLD);
+        int textX =contentX + 40;
+        int textY =contentY + 60;
+        int lineHeight = 35;
+
+        float winPercentage=statistics.gamesPlayed > 0 ? 
+            (float)statistics.gamesWon / statistics.gamesPlayed * 100.0f : 0.0f;
+        float avgScore=statistics.gamesPlayed > 0 ? 
+            (float)statistics.totalScore / statistics.gamesPlayed : 0.0f;
+        float avgMoves=statistics.gamesPlayed > 0 ? 
+            (float)statistics.totalMoves / statistics.gamesPlayed : 0.0f;
+
+        DrawText(TextFormat("Games Played: %d", statistics.gamesPlayed), textX, textY, 24, WHITE); 
+        textY += lineHeight;
+        
+        DrawText(TextFormat("Games Won: %d", statistics.gamesWon), textX, textY, 24, WHITE); 
+        textY += lineHeight;
+        
+        DrawText(TextFormat("Win Percentage: %.1f%%", winPercentage), textX, textY, 24, 
+                winPercentage >= 50.0f ? LIME : ORANGE); 
+        textY += lineHeight;
+        
+        DrawText(TextFormat("Highest Score: %d", statistics.highestScore), textX, textY, 24, 
+                statistics.highestScore > 0 ? GOLD : WHITE); 
+        textY += lineHeight;
+        
+        DrawText(TextFormat("Average Score: %.1f", avgScore), textX, textY, 24, WHITE); 
+        textY += lineHeight;
+        
+        DrawText(TextFormat("Average Moves: %.1f", avgMoves), textX, textY, 24, WHITE); 
+        textY += lineHeight;
+        
+        DrawText(TextFormat("Total Moves: %d", statistics.totalMoves), textX, textY, 24, WHITE); 
+        textY += lineHeight;
+        
+        DrawText("Press S or ESC to close", GetScreenWidth()/2 - 100, GetScreenHeight() - 50, 20, YELLOW);
+}
+    
+    void renderGame() 
+{
+
+        DrawRectangleGradientV(0, 0, GetScreenWidth(), GetScreenHeight(), Color{25, 50, 100, 255}, Color{15, 30, 60, 255});
+        
+        DrawText("KLONDIKE SOLITAIRE", 22, 12, 36, BLACK);
+        DrawText("KLONDIKE SOLITAIRE", 20, 10, 36, GOLD);
+        
+        DrawText(TextFormat("Score: %d", score), 520, 25, 24, YELLOW);
+        DrawText(TextFormat("Moves: %d", moves), 720, 25, 24, LIME);
+        
+        const char* diffNames[] = {"EASY", "MEDIUM", "HARD"};
+        DrawText(TextFormat("Difficulty: %s", diffNames[currentDifficulty]), 350, 60, 20, SKYBLUE);
+        
+        if (currentDifficulty == HARD) 
+{
+            DrawText(TextFormat("Recycles: %d/%d", recycleCount, maxRecycles), 620, 60, 20, 
+                    recycleCount >= maxRecycles ? RED : ORANGE);
+}
+        
+        int pct = (found[0].gsize() + found[1].gsize() + found[2].gsize() + found[3].gsize()) * 100 / 52;
+        
+        Color pctColor;
+        if (pct < 25) pctColor = RED;
+        else if (pct < 50) pctColor = ORANGE;
+        else if (pct < 75) pctColor = YELLOW;
+        else if (pct < 100) pctColor = LIME;
+        else pctColor = GREEN;
+        
+        DrawText(TextFormat("Complete: %d%%", pct), 920, 25, 24, pctColor);
+        
+        int y=100;
+        if (hoverCol == -10) 
+{
+            float glow = 0.3f + 0.2f * std::sin(hoverGlow);
+            DrawRectangle((int)(stockRect.x - 5), (int)(stockRect.y - 5), cw + 10, ch + 10, 
+                         Fade(YELLOW, glow));
+ }
+        
+        if (!stock.emptyy())
+ {
+            drawCard(CardItem(), stockRect.x, stockRect.y);
+            DrawText(TextFormat("%d", stock.gsize()), (int)stockRect.x + 10, 
+                    (int)stockRect.y + ch + 8, 20, WHITE);
+} 
+        else 
+{
+            DrawRectangleRounded(stockRect, 0.1f, 10, Fade(DARKGRAY, 0.5f));
+            DrawText("EMPTY", (int)stockRect.x + 25, (int)stockRect.y + 60, 18, LIGHTGRAY);
+}
+        
+        DrawText("STOCK", (int)stockRect.x + 25, (int)stockRect.y - 25, 18, WHITE);
+        
+
+        if (hoverCol ==-11) 
+{
+            float glow = 0.3f + 0.2f * std::sin(hoverGlow);
+            DrawRectangle((int)(wasteRect.x - 5), (int)(wasteRect.y - 5), cw + 10, ch + 10, 
+                         Fade(YELLOW, glow));
+}
+        
+        if (!waste.emptyy()) 
+{
+            drawCard(waste.peekRear(), wasteRect.x, wasteRect.y, dragging && dragType == 0);
+} 
+        else 
+{
+            DrawRectangleRounded(wasteRect, 0.1f, 10, Fade(DARKGRAY, 0.5f));
+}
+      
+        DrawText("WASTE", (int)wasteRect.x + 25, (int)wasteRect.y - 25, 18, WHITE);
+    
+        int fx=30 + (cw + 20) * 3;
+        for (int i = 0; i < 4; i++)
+{
+            if (hoverCol == 100 + i) 
+{
+                float glow = 0.3f + 0.2f * std::sin(hoverGlow);
+                DrawRectangle((int)(foundRects[i].x - 5), (int)(foundRects[i].y - 5), 
+                             cw + 10, ch + 10, Fade(YELLOW, glow));
+}
+            
+            if (!found[i].emptyy()) 
+{
+                drawCard(found[i].peekRear(), foundRects[i].x, foundRects[i].y);
+                DrawText(TextFormat("%d", found[i].gsize()), 
+                        (int)foundRects[i].x + 40, (int)foundRects[i].y + 50, 
+                        24, Fade(WHITE, 0.7f));
+                    } 
+            else 
+{
+          
+                DrawRectangleRounded(foundRects[i], 0.1f, 10, Fade(DARKGRAY, 0.3f));
+}
+}
+        
+
+        int ty = y + ch + 50;
+        for (int c = 0; c < 7; c++) 
+{
+            if (hoverCol == c) 
+{
+                float glow = 0.3f + 0.2f * std::sin(hoverGlow);
+                int h = tabs[c].check_emp() ? ch : std::min(ch + tabs[c].card_count() * 25, 500);
+                DrawRectangle((int)(tabRects[c].x - 5), (int)(tabRects[c].y - 5),
+                             cw + 10, h + 10, Fade(YELLOW, glow));
+}
+            
+            if (tabs[c].check_emp()) 
+{
+                Rectangle r = {tabRects[c].x, (float)ty, (float)cw, (float)ch};
+                DrawRectangleRounded(r, 0.1f, 10, Fade(DARKGRAY, 0.5f));
+                DrawText("K", (int)tabRects[c].x + 40, ty + 60, 35, LIGHTGRAY);
+                DrawText("Only", (int)tabRects[c].x + 25, ty + 100, 15, YELLOW);
+                DrawText("Kings", (int)tabRects[c].x + 22, ty + 115, 15, YELLOW);
+} 
+            else 
+{
+                for (int i = 0; i < tabs[c].card_count(); i++) 
+{
+                    bool hl=dragging && dragType==c + 1 && i >= dragCard;
+                    drawCard(tabs[c].card_at(i), tabRects[c].x, ty + i * 25, hl);
+}
+                
+              
+                int faceDownCount = 0;
+                for (int i = 0; i < tabs[c].card_count(); i++) 
+{
+                    if (!tabs[c].card_at(i).is_faceup) faceDownCount++;
+}
+                if (faceDownCount > 0) 
+{
+                    DrawText(TextFormat("%d↓", faceDownCount), 
+                            (int)tabRects[c].x + 5, ty + tabs[c].card_count() * 25 + 5, 
+                            16, Fade(YELLOW, 0.7f));
+}
+}
+}
+
+        int animSize = anims.gsize();
+        for (int i = 0; i < animSize; i++) 
+{
+            CardAnimation a = anims.valueat(i);
+            float t = a.progress;
+            float ease = t < 0.5f ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2;
+            float x = a.start.x + (a.end.x - a.start.x) * ease;
+            float y = a.start.y + (a.end.y - a.start.y) * ease - std::sin(t * 3.14f) * 20;
+            drawCard(CardItem(a.cardRank, a.cardSuit, true), x, y, true, 1.0f - t * 0.3f);
+}
+
+        int particleSize = particles.gsize();
+        for (int i = 0; i < particleSize; i++) {
+            Particle p = particles.valueat(i);
+            DrawCircle((int)p.pos.x, (int)p.pos.y, p.size, Fade(p.color, p.life));
+}
+
+        if (dragging && !dragCards.emptyy()) 
+{
+            Vector2 m = GetMousePosition();
+            int dragCardsSize = dragCards.gsize();
+            for (int i = 0; i < dragCardsSize; i++) 
+{
+                CardItem card = dragCards.valueat(i);
+                drawCard(card, m.x + dragOff.x, m.y + dragOff.y + i * 25, true, 0.9f);
+}
+}
+        
+
+        if (showHelp) 
+{
+       
+            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.7f));
+            
+            int hw = 600, hh = 400;
+            int hx = GetScreenWidth() / 2 - hw / 2;
+            int hy = GetScreenHeight() / 2 - hh / 2;
+            
+            DrawRectangle(hx, hy, hw, hh, Color{30, 30, 30, 255});
+            DrawRectangleLines(hx, hy, hw, hh, GOLD);
+            
+            DrawText("IN-GAME HELP", hx + 200, hy + 20, 28, GOLD);
+            DrawRectangle(hx + 20, hy + 55, hw - 40, 2, GOLD);
+            
+            int tx = hx + 40, tyy = hy + 75, ls = 24;
+            
+            DrawText("• Drag cards to move them", tx, tyy, 20, WHITE); tyy += ls;
+            DrawText("• Double-click cards to move to foundation", tx, tyy, 20, WHITE); tyy += ls;
+            DrawText("• Click stock to draw cards", tx, tyy, 20, WHITE); tyy += ls;
+            DrawText("• Empty stock recycles waste", tx, tyy, 20, WHITE); tyy += ls;
+            DrawText("• Press U to undo moves", tx, tyy, 20, WHITE); tyy += ls;
+            DrawText("• Press S for statistics", tx, tyy, 20, WHITE); tyy += ls;
+            DrawText("• Press H to close help", tx, tyy, 20, WHITE); tyy += ls;
+            
+            DrawRectangle(hx + 20, hy + hh - 55, hw - 40, 2, GOLD);
+            DrawText("Press H or ESC to close", hx + 180, hy + hh - 40, 20, YELLOW);
+        }
+        
+        if (won) {
+            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.7f));
+            
+            int wx = GetScreenWidth() / 2 - 200;
+            int wy = GetScreenHeight() / 2 - 150;
+            
+            DrawRectangle(wx, wy, 400, 300, Color{40, 40, 40, 255});
+            DrawRectangleLines(wx, wy, 400, 300, GOLD);
+            
+            DrawText("CONGRATULATIONS!", wx + 50, wy + 40, 28, GOLD);
+            DrawText("You Won!", wx + 130, wy + 90, 32, LIME);
+            
+            DrawText(TextFormat("Final Score: %d", score), wx + 100, wy + 140, 24, WHITE);
+            DrawText(TextFormat("Total Moves: %d", moves), wx + 100, wy + 180, 24, WHITE);
+            
+            DrawText("Completed Suits:", wx + 100, wy + 220, 20, YELLOW);
+            int suitX = wx + 120;
+            for (int i = 0; i < 4; i++) 
+{
+                if (found[i].gsize() == 13)
+{
+                    const char* symbols[] = {"\u2665", "\u2666", "\u2660", "\u2663"};
+                    Color colors[] = {RED, RED, WHITE, WHITE};
+                    DrawText(symbols[i], suitX, wy + 250, 30, colors[i]);
+                    suitX += 40;
+}
+ }
+            
+            DrawText("Press N for New Game", wx + 90, wy + 290, 20, YELLOW);
+        }
+        
+        if (!showHelp && !won) {
+            DrawText("H:Help  U:Undo  S:Stats  ", 20, GetScreenHeight() - 35, 20, YELLOW);
+            DrawText("N:New Game", GetScreenWidth() - MeasureText("N:New Game", 20) - 20, 
+                    GetScreenHeight() - 35, 20, LIME);
+        }
+}
+    
+    void handleLevelSelectInput() 
+{
+        Vector2 mousePos = GetMousePosition();
+        
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
+{
+
+            int levelButtonSize = levelButtons.gsize();
+            for (int i = 0; i < levelButtonSize; i++) 
+{
+                Button btn = levelButtons.valueat(i);
+                if (CheckCollisionPointRec(mousePos, btn.rect)) 
+{
+                
+                    switch(i)
+{
+                        case 0: currentDifficulty = EASY; break;
+                        case 1: currentDifficulty = MEDIUM; break;
+                        case 2: currentDifficulty = HARD; break;
+ }
+                    
+                
+                    init();
+                    currentScreen = PLAYING;
+                    return;
+}
+}
+}
+}
+    
+    void handleHelpInput() 
+{
+       
+        if (IsKeyPressed(KEY_H) || IsKeyPressed(KEY_ESCAPE)) {
+            showHelp = false;
+            if (currentScreen == HELP) 
+{
+                currentScreen = PLAYING;
+}
+}
+}
+    
+    void handleStatsInput() 
+{
+      
+        if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_ESCAPE)) 
+{
+            currentScreen = PLAYING;
+}
+}
+    
+    void handleSettingsInput() 
+{
+    
+        if (IsKeyPressed(KEY_T) || IsKeyPressed(KEY_ESCAPE)) 
+{
+            currentScreen = PLAYING;
+}
+}
+    
+    void handleGameInput() 
+{
+        Vector2 mousePos = GetMousePosition();
+    
+        if (IsKeyPressed(KEY_H)) 
+{
+            showHelp = !showHelp;
+            if (showHelp) currentScreen = HELP;
+            else currentScreen = PLAYING;
+}
+        if (IsKeyPressed(KEY_U)) undo();
+        if (IsKeyPressed(KEY_S)) currentScreen = STATS;
+        if (IsKeyPressed(KEY_T)) currentScreen = SETTINGS;
+        if (IsKeyPressed(KEY_N)) 
+{
+           
+            save();
+            currentScreen = LEVEL_SELECT;
+            return;
+}
+        
+        if (showHelp || won) return;
+        hoverCol = -1;
+        if (CheckCollisionPointRec(mousePos, stockRect)) hoverCol = -10;
+        else if (CheckCollisionPointRec(mousePos, wasteRect)) hoverCol = -11;
+        else {
+            for (int i = 0; i < 4; i++) {
+                if (CheckCollisionPointRec(mousePos, foundRects[i])) 
+{
+                    hoverCol = 100 + i;
+                    break;
+}
+}
+            if (hoverCol == -1) 
+{
+                for (int i = 0; i < 7; i++) 
+{
+                    if (CheckCollisionPointRec(mousePos, tabRects[i])) 
+{
+                        hoverCol = i;
+                        break;
+}
+}
+}
+}
+        
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
+{
+            double now = GetTime();
+            
+            if (CheckCollisionPointRec(mousePos, stockRect)) 
+{
+          
+                if (!stock.emptyy() || !waste.emptyy()) {
+                    drawStock();
+                }
+                return;
+}
+
+            if (CheckCollisionPointRec(mousePos, wasteRect) && !waste.emptyy()) 
+{
+                if (now - lastClick < 0.5 && lastCol == 0) 
+{
+             
+                    moveToFoundation(0, 0);
+                    lastCol = -1;
+} 
+                else 
+{
+
+                    dragType = 0;
+                    dragCard = 0;
+                    dragging = true;
+                    dragCards.clearr();
+                    dragCards.enqueue(waste.peekRear());
+                    dragOff = {wasteRect.x - mousePos.x, wasteRect.y - mousePos.y};
+                    lastClick = now;
+                    lastCol = 0;
+}
+                return;
+}
+            
+            for (int i = 0; i < 4; i++) 
+{
+                if (CheckCollisionPointRec(mousePos, foundRects[i])) 
+{
+                    lastClick = now;
+                    lastCol = -1;
+                    return;
+}
+}
+            
+    
+            int ty = 100 + ch + 50;
+            for (int c = 0; c < 7; c++) 
+{
+                if (!CheckCollisionPointRec(mousePos, tabRects[c])) continue;
+                
+                if (tabs[c].check_emp()) 
+{
+                    lastCol = -1;
+                    return;
+}
+
+                int clickedCard = -1;
+                for (int i = 0; i < tabs[c].card_count(); i++) 
+{
+                    float cy = ty + i * 25;
+                    if (mousePos.y >= cy && mousePos.y < cy + ch) {
+                        clickedCard = i;
+}
+}
+                
+                if (clickedCard >= 0 && tabs[c].card_at(clickedCard).is_faceup) 
+{
+                    if (now - lastClick < 0.5 && lastCol == c + 1 && 
+                        clickedCard == tabs[c].card_count() - 1) 
+{
+                        moveToFoundation(c + 1, clickedCard);
+                        lastCol = -1;
+} 
+                else 
+{
+                        dragType = c + 1;
+                        dragCard = clickedCard;
+                        dragging = true;
+                        dragCards.clearr();
+                        for (int i = clickedCard; i < tabs[c].card_count(); i++)
+{
+                            dragCards.enqueue(tabs[c].card_at(i));
+}
+                        dragOff = {tabRects[c].x - mousePos.x, ty + clickedCard * 25 - mousePos.y};
+                        lastClick = now;
+                        lastCol=c + 1;
+}
+}
+                return;
+}
+}
+  
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && dragging) {
+            bool moved = false;
+     
+            for (int i = 0; i < 4; i++) 
+{
+                if (CheckCollisionPointRec(mousePos, foundRects[i]) && dragCards.gsize() == 1)
+{
+          if (dragType == 0) 
+{
+                        moved = moveToFoundation(0, 0);
+}
+        else if (dragType >= 1 && dragType <= 7) 
+{
+                        moved=moveToFoundation(dragType, dragCard);
+}
+                    break;
+}
+}
+            
+            
+            if (!moved) 
+{
+                if (dragType==0) 
+{
+       for (int c = 0; c < 7; c++) 
+{
+         if (CheckCollisionPointRec(mousePos, tabRects[c])) 
+{
+                            moved=moveWasteToTableau(c + 1);
+                            break;
+ }
+ }
+ } 
+        else if (dragType >= 1 && dragType <= 7) 
+{
+                
+                    for (int c = 0; c < 7; c++) 
+{
+          if (CheckCollisionPointRec(mousePos, tabRects[c])) 
+{
+                            moved=moveCards(dragType, c + 1, dragCard);
+                            break;
+ }
+ }
+ }
+ }
+            
+            dragging=false;
+            dragCards.clearr();
+} 
 
 
 
