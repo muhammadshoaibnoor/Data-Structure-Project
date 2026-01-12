@@ -1,0 +1,827 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{longtable}
+
+\newcommand{\MainHeading}[1]{{\LARGE \textbf{#1}}}
+\newcommand{\SubHeading}[1]{{\large \textbf{#1}}}
+\newcommand{\Medium}[1]{{\Large \textbf{#1}}}
+\begin{document}
+
+\begin{titlepage}
+\noindent
+\includegraphics[width=2.5cm]{Namal logo.png} 
+\hspace{0.5cm}
+\raisebox{0.9cm}{\MainHeading{Namal University, Mianwali}}
+
+\vspace{0.3cm}
+
+\begin{center}
+{\Large \textbf{Data Structures Project Report}}\\[1cm]
+
+\SubHeading{Project:} Klondike Game\\[0.3cm]
+\SubHeading{Course:} CSC-200- Data Structure\\[0.3cm]
+\SubHeading{Department:} Computer Science\\[0.3cm]
+\SubHeading{Semester:} Fall 2025\\[1.5cm]
+
+\textbf{Submitted To:}\\
+MR. Abdul Rafay Khan \\
+Lecturer, Department of Computer Science\\[1.3cm]
+
+\textbf{Submitted By:}\\
+Muhammad Shoaib \hspace{0.75cm} Reg No: Num-Bscs-2024-57\\[0.2cm]
+ M Jamal Ahmed Khan \hspace{0.1cm} Reg No: Num-Bscs-2024-51\\[0.2cm]
+Naveed Abbasi \hspace{1.6cm} Reg No: Num-Bscs-2024-54\\[0.2cm]
+Muhammad Wasif \hspace{1cm} Reg No: Num-Bscs-2024-59\\[0.2cm]
+Bilal Ahmed Khan \hspace{0.85cm} Reg No: Num-Bscs-2024-21\\[0.2cm]
+Mubashir Hassan \hspace{1.2cm} Reg No: Num-Bscs-2024-38\\[0.2cm]
+
+\vfill
+\textbf{Submission Date: 12 Jan 2026} \\
+\end{center}
+
+\end{titlepage}
+
+\begin{abstract}
+\noindent This project focuses on the implementation of the Klondike card game using different data structures. The main objective is to understand how data structures behave when applied to a real world problem. Three separate versions of the Klondike game were developed using stack, linked list, and queue. Each implementation highlights the strengths and limitations of the chosen data structure. A graphical user interface was also developed to allow user interaction. This project provides a clear comparison between the data structures based on functionality, flexibility, and performance.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+
+\section{Introduction}
+Data structures has  a very important role in computer science field. This help in organizing and managing data efficiently. Choosing of data structure can help to improve the performance  of a program. This project is part of the data structures course. In this project, we selected a real world Game as a problem and solved it using data structures. The selected project is a Klondike game, which is a popular single player card game. The game was implemented using three different data structures to analyze their behavior.
+
+\section{Literature Review}
+Klondike Solitaire,  which is just known as ``Solitaire,'' is a very popular game. It is not just for fun, it is also studied by experts in math and computer science. This section looks at the history of the game, the math behind it, and how difficult it is for computers to solve.
+
+\subsection*{History and Evolution}
+No one is exactly sure when Solitaire started, but most people believe it started in Northern Europe in the late 1700s. The first written record of the game is in a German book from 1798. After that,it became very popular in France. We know this because we still use French words in the game today, like tableau and solitaire (which means ``alone''). There is a famous story that Napoleon played it while he was in exile, but many historians think this might not be true.
+
+The version called ``Klondike'' became famous in North America during the Gold Rush in  late 1800s. but the game became globally famous because of computers. In 1990, a Microsoft intern named Wes Cherry created the digital version for Windows 3.0. It was  designed to teach people how to use a mouse to ``drag and drop'' items, but it became one of the most played computer games ever.
+
+Studies show that about 82\% of all Klondike games can be won, but only if the player plays perfectly. A skilled human player will usually win about 43\% of the time, while a casual player might only win 10--15\% of games. This shows why game features like ``Undo'' or ``Hints'' are helpful, they help close the gap between human mistakes and the perfect solution.
+
+\subsection*{Data Structures in Card Games}
+Computer science textbooks often use card games to explain data structures. The Stack is the most common example because it works just like a pile of cards.We can only take the top card off (Last-In, First-Out).
+
+Now newer game development suggest that \textbf{Linked Lists}(Double link-list) are often better for games like Solitaire. While a Stack is good for a single pile, a Linked List is better for moving groups of cards from one pile to another. This project tests both methods to see which one works best for a real game.
+
+
+\section{Game Rules and Description}
+Klondike is a classical single player card game played with a deck of  52 cards. The game environment consists of four main areas.
+
+\begin{enumerate} \item \textbf{Tableau Piles:}
+Seven piles arranged in a row. The first pile containing one card, the second pile containing two cards, and like this seventh pile containing seven cards. Only the top cards of every pile is face-up and others are face down.
+ \item \textbf{Foundation Piles:}
+ Four empty piles  one for each, where all card are  to be placed in ascending order from Ace to King.
+ \item \textbf{Stock Pile:}
+ After distributing cards to the tableau else cards are placed in the stock pile. Player can draw cards from the stock.
+\item \textbf{Waste Pile:}
+Drawn cards from the stock placed in the waste pile and player can move card from waste pile.
+ \end{enumerate}
+
+\subsection*{Gameplay Rules} \begin{itemize} 
+\item Player can move face up card or a sequence of a face up cards from one tableau to another in a descending order and a changing color.
+ \item Only a king or a sequence starting with a king can be placed in an empty tableau pile. 
+\item one Card at a time move from the waste pile or tableau pile to the foundation pile. Valid move If the picked card is one rank greater than the card currently placed on source foundation pile and of same suit .If oat first for empty  Ace can be place on the foundation .
+ \item Drawn cards from the stock pile placed in the waste pile. 1, 2 or 3 can be drawn based on the difficulty. 
+ \item The objective of the game is to move all cards to the foundation piles in ascending order of same suit.
+  \end{itemize}
+\section{Methodology}
+The project used an incremental development approach. Three versions of the Klondike game were created using stack, linked list, and queue. This allowed the team to compare the performance, limitations, and suitability of each data structure for the game. The development began by creating and organizing all cards, assigning their suit, rank, color and face up status. Then we implemented the game logic to move cards according to the Klondike rules. After this graphical user interface (GUI) was implemented so player can interact with the game visually, seeing moving of the card and flipping of the cards automatically. Finally, the game was tested to make sure that game ran properly and according to the real Klondike game.
+
+\subsection*{Stack-Based Version}
+All card pile (Tableau, Foundation, Stock and Waste) were implemented using stacks. Each card store its suit, rank, color and face up status. The Game logic used main stack operations like (Push, Pop and Top) to perform valid moves. The GUI updates the display after each move, showing card movements and flipping cards when needed.
+\subsection*{Linked List Based Version}
+A linked list data structure was used to implement all major card piles, including the Waste , Foundation , Stock, and Tableau piles. Each pile was represented as a dynamically managed linked list, allowing efficient insertion and removal of cards during game. Every card node has essential attributes such as suit, rank, color, and face-up status, making easy for rule validation and visual representation.
+
+The linked list structure provided direct control over node traversal, making it  suitable for tableau operations involving partial card sequences, where multiple consecutive cards must be moved together. Cards could be inserted or removed from any position into a pile without requiring a shifting operations, which  improved flexibility compared to array-based or stack-only approaches.
+
+
+The game logic is designed by traversing these linked lists to validate moves according to Klondike Solitaire rules, including alternating colors, descending rank order in the tableau, and ascending rank order within matching suits in the foundation piles. The Stock and Waste piles were also managed using linked lists, used for  draw and recycle operations through node transfers.
+
+
+For Graphical User Interface Raylib was used with the linked list state to render card positions, handle drag-and-drop interactions, and update animations. Upon successfully transferring all cards to the foundation piles, the system detected the winning condition through linked list state  and displayed an related game completion message.
+\subsection*{Queue Based Version}
+A queue is implemented in this game for all major card piles such as Tableau, foundation, stock and waste. Each pile is implemented in circular array based queue with front and rear that allowing the cards management during the game through enqueue and dequeue operations. Each card has attributes such as rank number, suit character and face up boolean status and makes game to check the rule validation and representation through methods such that check\_red (), card\_details () etc. 
+
+The queue structure gives FIFO access patterns with O(1) enqueue and dequeue operations that makes it for suitable for stock to waste, checking card sequences, through accessing top card tableau or foundation that needs queue complete traversal using a temporary queues to peek that last element without removing it permanent. Cards are added in pile in rear and dequeue through front but operations such that moving the multiple face up cards from tableau to tableau in systematic way like dequeue to temporary queue follow this to en queuing that maintains the game state consistence. Game logic is operated by traversing queues to valid moves according to game rules. Stock and waste piles contains the 24 capacity queue that supports in card draw operations such that dequeue from stock and enqueue in waste with face up flipping and vice versa. In Foundation, there is simple enqueue is used that accepts the descending and dequeue for use temporary queues. Raylib is used to make GUI of game there is use of ray lib built in function to handle mouse click, render the card position.
+
+\section{Algorithms of All Applied Data Structures}
+\subsection{Stack Based Klondike Game Algorithm}
+This section describes that how stack based Klondike game is implemented by using \textbf{Stack}. Each pile in the game is represented as stack. A graphical user interface (GUI) built using Raylib library provides real time visual interaction with the game.
+
+\subsubsection{1. Game Initialization}
+\begin{enumerate}
+    \item Create a deck of 52 cards. Each card stores:
+    \begin{itemize}
+        \item Suit: Hearts, Diamonds, Clubs, Spades
+        \item Rank: Ace to King
+        \item Color: Red or Black
+        \item Face-up status: True or False
+    \end{itemize}
+    \item Push all cards into the stock stack.
+    \item Shuffle the stock stack randomly.
+    \item Deal cards to 7 tableau stacks:
+    \begin{itemize}
+        \item Tableau 1 receives 1 card, tableau 2 receives 2 cards, ..., tableau 7 receives 7 cards.
+        \item Only the top card in each tableau is face-up; the rest remain face-down.
+    \end{itemize}
+    \item Initialize 4 empty foundation stacks and an empty waste stack.
+    \item Render all stacks on the GUI:
+    \begin{itemize}
+        \item Stock and waste piles at the top-left.
+        \item Foundation piles at the top-right.
+        \item Tableau piles arranged in a row below the stock and waste.
+        \item Face down cards show a card back image face up cards show rank and suit.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{2. Drawing Cards from Stock}
+\begin{itemize}
+    \item Clicking on the stock pile pops a card from the stock stack.
+    \item The card's \texttt{faceup} property is set to true and it is pushed onto the waste stack.
+    \item The GUI automatically updates to display the top card in the waste pile.
+    \item If the stock is empty, all cards from the waste are moved back to the stock flipped face down, and the GUI is updated accordingly.
+\end{itemize}
+
+\subsubsection{3. Moving Cards Between Stacks}
+\textbf{Waste to Tableau/Foundation:}
+\begin{itemize}
+    \item Validate moves based on Klondike rules:
+    \begin{itemize}
+        \item Tableau: top card must be one rank lower and opposite color, or a King if the tableau is empty.
+        \item Foundation: same suit and next rank in sequence, or Ace if empty.
+    \end{itemize}
+    \item If valid, pop from waste and push onto the target stack.
+    \item The GUI updates the card movement visually.
+\end{itemize}
+
+\textbf{Tableau to Tableau:}
+\begin{itemize}
+    \item Select a sequence of face up cards from the source tableau using click and drag.
+    \item Validate the sequence is in descending order with alternating colors.
+    \item Pop cards from the source stack and push them onto the destination stack.
+    \item Animate the movement in the GUI for smooth visuals.
+\end{itemize}
+
+\textbf{Tableau to Foundation:}
+\begin{itemize}
+    \item The top card of a tableau can be moved to the foundation stack if it is of same suit and color and one rank greater than the top card of the foundation pile or if foundation pile is empty only ace can place on the foundation pile.
+    \item Pop from tableau and push to foundation, GUI updates accordingly.
+\end{itemize}
+
+\textbf{Foundation to Tableau:}
+\begin{itemize}
+    \item The top card of a foundation stack can be moved back to a tableau if it is os different color and one rank lower than top card of tableau pile or only king can be moved to the tableau pile.
+    \item The stack is updated and GUI reflects the change.
+\end{itemize}
+
+\subsubsection{4. Flipping Tableau Cards}
+\begin{itemize}
+    \item When a face up card is moved from a tableau the new top card is flipped face up automatically.
+    \item GUI shows the flip animation instantly.
+\end{itemize}
+
+\subsubsection{5. Checking Win Condition}
+\begin{itemize}
+   \item The player wins the game when each of the four foundation piles has all 13 cards of its suit, arranged in ascending order from Ace to King.
+    \item GUI displays a winning message.
+\end{itemize}
+
+\subsubsection{6. User Interaction}
+\begin{enumerate}
+    \item Click on stock to draw a card.
+    \item Drag and drop cards or sequences between tableau piles.
+    \item Drag cards to foundation piles.
+    \item GUI updates are instantaneous and animated.
+\end{enumerate}
+
+
+\subsection{Linked List Based Klondike Game Algorithm}
+ Each pile in the game is represented as a linked list, allowing dynamic memory allocation, efficient traversal, and flexible manipulation of card sequences. A graphical user interface (GUI) built using the \textbf{Raylib} library provides real-time visual interaction with the game.
+
+\subsubsection{1. Game Initialization}
+\begin{enumerate}
+    \item A standard  deck as per  Klondike of 52 cards is created. Each card node stores:
+    \begin{itemize}
+        \item Suit (0--3 representing Hearts, Diamonds, Clubs, Spades)
+        \item Rank (1--13 representing Ace to King)
+        \item Color (Red or Black)
+        \item Face-up status (True or False)
+    \end{itemize}
+    \item All cards are inserted into the \textbf{stock pile}, implemented as a linked list using head insertion.
+    \item   Then stock pile is shuffled for random card distribution with the elp of array.
+    \item Cards are distributed to seven tableau linked lists:
+    \begin{itemize}
+        \item Tableau 1 receives 1 card, tableau 2 receives 2 cards, up to tableau 7 receiving 7 cards.
+        \item Only the last card in each tableau is  face-up; all others remain face-down.
+    \end{itemize}
+    \item Four empty foundation linked lists and an empty waste linked list are initialized.
+    \item The GUI renders all piles dynamically:
+    \begin{itemize}
+        \item Stock and waste piles at the top-left.
+        \item Foundation piles at the top-right.
+        \item Tableau piles arranged horizontally below.
+        \item Face-down cards display the card back image, while face-up cards display their rank and suit.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{2. Drawing Cards from Stock}
+\begin{itemize}
+    \item Clicking the stock pile removes a card node from the head of the stock linked list.
+    \item The card’s face-up status is set to true and it is inserted at the head of the waste linked list.
+    \item If the stock becomes empty, all cards from the waste pile are recycled back into the stock:
+    \begin{itemize}
+        \item Cards are transferred through a temporary linked list.
+        \item Each card is flipped face-down before reinsertion.
+    \end{itemize}
+    \item The GUI updates immediately to reflect these changes.
+\end{itemize}
+
+\subsubsection{3. Moving Cards Between Linked Lists}
+
+\textbf{Waste to Tableau / Foundation:}
+\begin{itemize}
+    \item The top card of the waste linked list is selected.
+    \item Moves are  as per  Klondike rules:
+    \begin{itemize}
+        \item Tableau piles accept a card of opposite color and one rank lower, or a King if empty.
+        \item Foundation piles accept a card of the same suit and one rank higher, or an Ace if empty.
+    \end{itemize}
+    \item If valid, the card node is removed from the waste list and inserted into the destination linked list.
+\end{itemize}
+
+\textbf{Tableau to Tableau:}
+\begin{itemize}
+    \item A sequence of consecutive face-up cards is selected by traversing the tableau linked list.
+    \item The sequence is validated for descending rank order with alternating colors.
+    \item Valid sequences are removed node-by-node from the source tableau and inserted into the destination tableau.
+    \item This linked list traversal allows efficient handling of multi-card moves.
+\end{itemize}
+
+\textbf{Tableau to Foundation:}
+\begin{itemize}
+    \item Only the head (top card) of a tableau linked list can be moved.
+    \item The card must match the suit of the foundation and be one rank higher than the foundation’s top card.
+    \item If valid, the node is transferred to the relative foundation linked list.
+\end{itemize}
+
+\textbf{Foundation to Tableau:}
+\begin{itemize}
+    \item The top card of a foundation linked list can be moved back to a tableau.
+    \item The destination tableau must either be empty (King only) or satisfy alternating color and descending rank rules.
+\end{itemize}
+
+\subsubsection{4. Flipping Tableau Cards}
+\begin{itemize}
+    \item After a card or sequence is removed from a tableau, the new head node is checked.
+    \item If the card is face-down, it is removed, its face-up status is updated, and it is reinserted.
+    \item The GUI immediately displays the flip animation.
+\end{itemize}
+
+\subsubsection{5. Checking Win and Loss Conditions}
+\begin{itemize}
+    \item The game is won when all four foundation linked lists contain exactly 13 cards each.
+    \item A loss condition is detected when:
+    \begin{itemize}
+        \item Stock and waste piles are empty, or time up
+        \item No legal moves exist across tableau and foundation piles.
+    \end{itemize}
+    \item The GUI displays appropriate win or game-over messages.
+\end{itemize}
+
+\subsubsection{6. User Interaction and GUI Synchronization}
+\begin{enumerate}
+    \item Mouse clicks are used to draw cards from the stock.
+    \item Drag-and-drop functionality allows moving single cards or sequences.
+    \item Undo functionality is implemented using snapshots of linked list states.
+    \item The GUI continuously synchronizes with linked list data to render cards, animations, hints, timers, and sound effects.
+\end{enumerate}
+
+\subsection{Queue Based Klondike Game Algorithm}
+
+This section describes the implementation of the Klondike Solitaire game using a \textbf{queue} data structure. All card piles are represented using queues to demonstrate how a First-In-First-Out (FIFO) structure behaves in a game that naturally follows a Last-In-First-Out pattern. A graphical user interface (GUI) is used to visually represent card movements and game progress.
+
+\subsubsection{1. Game Initialization}
+\begin{enumerate}
+    \item A standard deck of 52 cards is created. Each card stores:
+    \begin{itemize}
+        \item Suit (Hearts, Diamonds, Clubs, Spades)
+        \item Rank (Ace to King)
+        \item Color (Red or Black)
+        \item Face-up status (True or False)
+    \end{itemize}
+    \item All cards are enqueued into the \textbf{stock queue}.
+    \item The stock queue is shuffled by converting it into an array, applying shuffle logic, and converting it back into a queue.
+    \item Cards are dealt into seven tableau queues:
+    \begin{itemize}
+        \item Tableau 1 receives 1 card, tableau 2 receives 2 cards, up to tableau 7 receiving 7 cards.
+        \item Only the rear card of each tableau queue is marked face-up.
+    \end{itemize}
+    \item Four empty foundation queues and an empty waste queue are initialized.
+    \item The GUI renders all piles:
+    \begin{itemize}
+        \item Stock and waste piles at the top-left.
+        \item Foundation piles at the top-right.
+        \item Tableau piles arranged horizontally below.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{2. Drawing Cards from Stock}
+\begin{itemize}
+    \item Clicking the stock dequeues a card from the front of the stock queue.
+    \item The card is flipped face-up and enqueued into the waste queue.
+    \item If the stock queue becomes empty, waste cards are recycled:
+    \begin{itemize}
+        \item All waste cards are dequeued one by one.
+        \item Cards are flipped face-down.
+        \item Cards are enqueued back into the stock queue in reverse order.
+    \end{itemize}
+    \item The GUI updates immediately after each action.
+\end{itemize}
+
+\subsubsection{3. Moving Cards Between Queues}
+
+\textbf{Waste to Tableau / Foundation:}
+\begin{itemize}
+    \item The rear card of the waste queue is selected.
+    \item Moves are validated using Klondike rules:
+    \begin{itemize}
+        \item Tableau: opposite color and one rank lower, or King if empty.
+        \item Foundation: same suit and one rank higher, or Ace if empty.
+    \end{itemize}
+    \item If valid, the card is dequeued from waste and enqueued into the destination queue.
+\end{itemize}
+
+\textbf{Tableau to Tableau:}
+\begin{itemize}
+    \item A sequence of face-up cards is identified by traversing the queue.
+    \item The sequence is validated for descending rank and alternating colors.
+    \item Cards are moved one by one using dequeue and enqueue operations.
+\end{itemize}
+
+\textbf{Tableau to Foundation:}
+\begin{itemize}
+    \item Only the rear card of a tableau queue can be moved.
+    \item The card must match the foundation suit and be one rank higher.
+\end{itemize}
+
+\subsubsection{4. Flipping Tableau Cards}
+\begin{itemize}
+    \item After removing cards from a tableau queue, the new rear card is checked.
+    \item If it is face-down, its face-up status is updated.
+    \item The GUI displays the flip visually.
+\end{itemize}
+
+\subsubsection{5. Checking Win Condition}
+\begin{itemize}
+    \item The game is won when all four foundation queues contain exactly 13 cards.
+    \item This check is performed after each successful move to the foundation.
+    \item The GUI displays a winning message when the condition is met.
+\end{itemize}
+
+\subsubsection{6. User Interaction and GUI Updates}
+\begin{enumerate}
+    \item Mouse clicks are used to draw cards and select piles.
+    \item Drag-and-drop allows moving cards between piles.
+    \item Double-click enables automatic movement to foundation when possible.
+    \item The GUI continuously synchronizes with queue data to render cards, animations, and messages.
+\end{enumerate}
+
+\subsubsection{Game Setup and Initialization}
+
+\subsubsection{Deck Creation and Shuffling}
+\begin{enumerate}
+    \item Create a standard deck of 52 cards.
+    \begin{itemize}
+        \item Four suits: Hearts, Diamonds, Spades, Clubs
+        \item Thirteen ranks per suit: Ace to King
+        \item All cards are initially face-down
+    \end{itemize}
+    \item Shuffle the deck:
+    \begin{itemize}
+        \item Convert the queue into an array
+        \item Apply the Fisher--Yates shuffle algorithm
+        \item Repeat the shuffle process three times for better randomness
+        \item Convert the shuffled array back into a queue
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Dealing Cards}
+\begin{enumerate}
+    \item Deal cards into seven tableau columns:
+    \begin{itemize}
+        \item Column 1 gets 1 card, column 2 gets 2 cards, up to column 7
+        \item Only the top card of each column is face-up
+        \item A total of 28 cards are dealt
+    \end{itemize}
+    \item Place the remaining 24 cards into the stock pile, face-down
+    \item Initialize game state:
+    \begin{itemize}
+        \item Set score and move counter to zero
+        \item Clear all four foundation piles
+        \item Clear the waste pile
+        \item Create an initial snapshot for undo functionality
+        \item Reset recycle counter for Hard mode
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Main Game Loop}
+
+The game runs continuously and consists of three phases:
+
+\subsubsection{Update Phase}
+\begin{itemize}
+    \item Update card animations and particle effects
+    \item Detect mouse hover areas
+    \item Update timers for double-clicks and visual effects
+\end{itemize}
+
+\subsubsection{Input Phase}
+\begin{itemize}
+    \item Handle keyboard input:
+    \begin{itemize}
+        \item H: Help screen
+        \item U: Undo move
+        \item S: Statistics
+        \item N: New game
+        \item ESC: Close overlays
+    \end{itemize}
+    \item Handle mouse clicks, drags, and releases
+\end{itemize}
+
+\subsubsection{Render Phase}
+\begin{itemize}
+    \item Draw background and UI elements
+    \item Display score, moves, difficulty, and completion percentage
+    \item Render stock, waste, foundations, and tableau piles
+    \item Show animations, highlights, and overlays
+\end{itemize}
+
+\subsection{Card Movement Rules}
+
+\subsubsection{Tableau Movement}
+\begin{enumerate}
+    \item Identify source and destination columns
+    \item Validate move:
+    \begin{itemize}
+        \item Empty column accepts only a King
+        \item Cards must alternate colors
+        \item Rank must be exactly one lower
+    \end{itemize}
+    \item Allow moving multiple face-up cards together
+    \item Flip the new top card if it was face-down
+    \item Award 5 points for flipping a card
+\end{enumerate}
+
+\subsubsection{Foundation Movement}
+\begin{itemize}
+    \item Each foundation is suit-specific
+    \item Cards must be placed from Ace to King in order
+    \item Only an Ace can start an empty foundation
+    \item Award 10 points for valid moves
+\end{itemize}
+
+\subsubsection{Auto-Move to Foundation}
+\begin{itemize}
+    \item Double-click attempts automatic move to foundation
+    \item Works for both waste and tableau cards
+\end{itemize}
+
+\subsection{Drawing from Stock and Recycling Waste}
+
+\subsubsection{Drawing Cards}
+\begin{itemize}
+    \item Easy mode: draw 1 card
+    \item Medium/Hard mode: draw up to 3 cards
+    \item Only the top waste card is playable
+\end{itemize}
+
+\subsubsection{Recycling Waste}
+\begin{itemize}
+    \item Triggered when stock is empty
+    \item Cards are flipped face-down and reversed
+    \item Easy/Medium: unlimited recycles
+    \item Hard: maximum 3 recycles with penalty
+    \item Deduct 100 points per recycle
+\end{itemize}
+
+\subsection{Undo System}
+
+\begin{itemize}
+    \item Save game state before every valid move
+    \item Store up to 50 snapshots in a queue
+    \item Undo restores the most recent snapshot
+    \item No penalty for using undo
+\end{itemize}
+
+\subsection{Animations and Particle Effects}
+
+\begin{itemize}
+    \item Card movement animations last 0.3 seconds
+    \item Smooth easing and slight arc movement
+    \item Particle effects trigger on foundation moves
+    \item Win celebration uses continuous particle effects
+\end{itemize}
+
+\subsection{Winning and Scoring}
+
+\subsubsection{Win Condition}
+\begin{itemize}
+    \item All four foundation piles contain 13 cards
+    \item All cards are arranged from Ace to King
+\end{itemize}
+
+\subsubsection{Scoring System}
+\begin{itemize}
+    \item +10 points for moving to foundation
+    \item +5 points for flipping tableau cards
+    \item -100 points for recycling waste
+\end{itemize}
+
+\subsection{Difficulty Levels}
+
+\begin{itemize}
+    \item Easy: draw 1 card, unlimited recycles
+    \item Medium: draw 3 cards, unlimited recycles
+    \item Hard: draw 3 cards, maximum 3 recycles
+\end{itemize}
+
+\subsection{Queue-Based Data Structure Design}
+
+\begin{itemize}
+    \item All piles are implemented using circular queues
+    \item Supported operations:
+    \begin{itemize}
+        \item enqueue()
+        \item dequeue()
+        \item peekRear()
+        \item valueAt(index) as to cover limitation
+        \item size()
+    \end{itemize}
+\end{itemize}
+
+\subsection{Card Representation}
+
+Each card stores:
+\begin{itemize}
+    \item Rank (1--13)
+    \item Suit (H, D, S, C)
+    \item Face-up status
+\end{itemize}
+
+
+
+\section{Time Complexity Analysis}
+
+\subsection{Stack Based Klondike Game Time Complexity}
+
+
+\renewcommand{\arraystretch}{1.2} 
+\begin{tabular}{|>{\raggedright\arraybackslash}p{4cm}|>{\raggedright\arraybackslash}p{3cm}|>{\raggedright\arraybackslash}p{7cm}|}
+\hline
+\textbf{Operation} & \textbf{Worst Case Time Complexity} & \textbf{Explanation} \\ \hline
+Push / Pop / Top & O(1) & Standard stack operations are constant time. \\ \hline
+Deal Cards to Tableau & O(1) per card → O(28) total & Each card is dealt one by one to the 7 tableau piles. Since there are 28 cards in total, it takes constant time per card, adding up to O(28) overall. \\ \hline
+
+Draw from Stock & O(1) & Pop from stock and push to waste takes O(1). \\ \hline
+Recycle Waste to Stock & O(n) & Move all cards from the waste pile back to the stock. Since there are at most 24 cards remaining after dealing 28 to the tableau, n $\le 24$. \\ \hline
+
+Move Card to Tableau/Foundation & O(1) per move & Only the top card of the source stack is checked and moved. Comparing the top cards and performing a push or pop operation takes constant time. \\ \hline
+
+Move Sequence of Cards & O(f) & f = number of face-up cards in the sequence. Each card in the sequence is checked and moved one by one, so the time depends on how many cards are being moved. \\ \hline
+
+Flip Tableau Top & O(1) & Only the top card of a tableau pile is flipped face-up when needed. 
+This takes constant time because we only change the status of one card, no matter how many cards are in the pile. \\ \hline
+
+
+Check Win Condition & O(1) & Verify if each of the four foundation stacks has all 13 cards. 
+This involves checking the size or top index of each stack, which is a fixed number of operations and does not depend on the total number of cards. \\ \hline
+\end{tabular}
+
+
+
+
+\subsection{Linked List Based Klondike Game Time Complexity}
+
+\renewcommand{\arraystretch}{1.3}
+
+\begin{longtable}{|>{\raggedright\arraybackslash}p{5cm}|
+                    >{\raggedright\arraybackslash}p{3cm}|
+                    >{\raggedright\arraybackslash}p{7cm}|}
+\hline
+\textbf{Major Function} & \textbf{Worst Case Time Complexity} & \textbf{Explanation} \\ 
+\hline
+\endfirsthead
+
+\hline
+\textbf{Major Function} & \textbf{Worst Case Time Complexity} & \textbf{Explanation} \\ 
+\hline
+\endhead
+
+createdeck() & O(n) &
+All 52 cards are generated and inserted into the stock linked list. Each insertion is constant time. \\ \hline
+
+shuffledeck() & O(n) &
+The entire stock pile is traversed to move cards into an array, shuffled, and then reinserted. Each card is processed a constant number of times. \\ \hline
+
+dealtableau() & O(1) &
+A fixed total of 28 cards are dealt to tableau piles. Each card is removed from stock and inserted into a tableau in constant time. \\ \hline
+
+drawtowastee() & O(1) &
+A single card is removed from the stock and inserted into the waste pile. Both operations involve only head pointer updates. \\ \hline
+
+recyclewastetostock() & O(n) &
+All cards in the waste pile are transferred back to the stock pile. Each card is removed and reinserted once, giving linear complexity. \\ \hline
+
+move\_tableau\_to\_foundation() & O(1) &
+Only the top card of the tableau pile is examined and moved if the rules allow. No traversal is required. \\ \hline
+
+move\_waste\_to\_foundation() & O(1) &
+The function checks and moves only the top card of the waste pile, making it a constant-time operation. \\ \hline
+
+hasLegalMoves() & O(n) &
+All tableau piles are scanned, and each face-up card sequence is checked for valid moves. In the worst case, all cards may be face-up. \\ \hline
+
+provideHint() & O(n) &
+The hint system searches through waste and tableau piles to identify all legal moves, requiring traversal of card structures. \\ \hline
+
+saveGameState() / loadGameState() & O(n) &
+Each pile is serialized or reconstructed by traversing its linked list. Since all cards may be processed, the operation is linear. \\ \hline
+
+performUndo() & O(n) &
+Undo restores a previously saved state by copying all card piles. Each linked list copy involves full traversal. \\ \hline
+
+\end{longtable}
+\subsection{Queue Based Klondike Game Time Complexity}
+
+\renewcommand{\arraystretch}{1.2}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{5cm}|
+                  >{\raggedright\arraybackslash}p{2.5cm}|
+                  >{\raggedright\arraybackslash}p{8cm}|}
+\hline
+\textbf{Operation} & \textbf{Worst Case Time Complexity} & \textbf{Explanation} \\
+\hline
+\endhead
+
+\texttt{shuffle\_cards()} & O(n) &
+The shuffle function performs multiple passes over the queue. In each pass, cards are dequeued, distributed into temporary queues, and then re-enqueued. Since all cards are processed, the overall time complexity is linear. \\
+\hline
+
+\texttt{tab\_to\_tab(int fcol, int tocol)} & O(n) &
+The source tableau column is traversed to locate movable face-up cards. The destination column is also checked for a valid move. After moving the cards, the new top card of the source column is flipped if needed. \\
+\hline
+
+\texttt{tab\_to\_foundation(int n)} & O(n) &
+The tableau column is traversed to access the top card and the foundation pile is checked for a valid move. The last card is removed and the next card is flipped, which requires full traversal. \\
+\hline
+
+\texttt{waste\_to\_tab(int n)} & O(n) &
+The waste pile is traversed to obtain the top card. The destination tableau column is then checked to validate the move, which requires traversal due to queue-based access. \\
+\hline
+
+\texttt{waste\_to\_foundation()} & O(n) &
+Both the waste pile and the foundation pile are traversed to compare their top cards before performing a valid move. \\
+\hline
+
+\texttt{recycle\_waste\_to\_stock()} & O(n) &
+All cards present in the waste pile are moved back to the stock pile. Each card is dequeued and enqueued once. \\
+\hline
+
+\texttt{check\_win()} & O(1) &
+Checks whether all four foundation piles contain 13 cards each. Since the number of foundations is fixed, this operation takes constant time. \\
+\hline
+
+\texttt{empty\_placement()} & O(1) &
+Checks only the rank of a card to determine whether it can be placed in an empty tableau or foundation pile. No traversal is required. \\
+\hline
+
+\texttt{count\_fdcard() / count\_fucard()} & O(n) &
+Traverses the entire column queue to count face-down or face-up cards. Cards are temporarily dequeued and then re-enqueued. \\
+\hline
+
+\texttt{get\_top\_card(int\& faceup\_count)} & O(n) &
+The column is fully traversed to reach the last card while counting face-up cards. All cards are restored back into the queue afterward. \\
+\hline
+
+\texttt{move\_faceup\_cards\_to()} & O(n) &
+The source column is traversed to separate face-down and face-up cards. The face-up cards are then moved to the destination column. \\
+\hline
+
+\texttt{remove\_lastcard()} & O(n) &
+Since queues do not support direct access to the last element, the entire column must be traversed to remove the last card and rebuild the queue. \\
+\hline
+
+\texttt{flip\_topp()} & O(n) &
+The full column is traversed to locate the last card, flip its face-up status, and then re-enqueue all cards back. \\
+\hline
+
+\texttt{display\_column(int max\_height)} & O(n) &
+All cards are dequeued for display and then re-enqueued back into the column, resulting in linear time complexity. \\
+\hline
+
+\end{longtable}
+
+
+
+\section{Comparison and Justification of Best Approach}
+In this project Klondike game was implemented using three different data structures. Stack, Linked List and Queue. Each approach was evaluated based on time complexity, ease of implementation and suitability with the game.
+\subsection*{Stack Based Approach}
+The stack based implementation is closely matches the real world behavior of card piles. Operations such as drawing from stock, moving to waste and placing card on foundations naturally follow the Last-In, First-Out (LIFO) principle.
+\begin{itemize}
+    \item Operations such as push, pop , top and a single card moves execute in O(1) time.
+    \item Moving a sequence of face up cards requires an additional temporary stack to preserve the order. however, the overall time complexity remains O(f), where f is the number of face up cards.
+    \item The logic is simple, efficient and easy.
+    \end{itemize}
+\subsubsection*{Limitation}
+Stacks are naturally suited for Klondike because they follow LIFO behavior, matching physical card piles. However, there are some limitations:
+Moving a sequence of face-up cards from one tableau column to another requires an extra step. Since popping cards from a stack reverses their order, the sequence must be copied into an intermediate stack to restore the original order before placing it in the destination column.
+Operations like moving multiple cards, checking sequences, or accessing deeper cards are not direct and need temporary storage, which slightly complicates the logic.
+While single-card operations are efficient (O(1)), handling sequences or implementing undo/hints requires careful management of multiple stacks.
+
+\subsection*{Linked List Based Approach}
+The Linked list approach provides the high flexibility mainly for moving sequence from one tableau to another tableau.
+\begin{itemize}
+    \item Linked list allow moving whole sequences easily by changing pointers.
+    \item Linked list is efficient for sequence moves (O(f)).
+    \item Linked list gives more flexibility and control.
+    
+\end{itemize}
+\subsubsection*{Limitation}
+The primary challenge is memory management and the risk of memory leaks if nodes are not deleted properly.
+Additionally, accessing a specific index requires O(n) traversal as there is no random access.
+\subsection*{Queue Based Approach}
+The Queue based implementation was the least suitable for Klondike game.
+\begin{itemize}
+    \item Since queues follow a First-In, First-Out (FIFO) so accessing the top card requires full rotation.
+    \item Many basic operations such as moving cards, flipping top cards and validating moves require O(n) time.
+    \item This  increases execution cost for frequent game actions.
+    
+\end{itemize}
+\subsubsection*{Limitation}
+Game using a queue faces a limitation due to fundamental mismatch between queue and games needs a LIFO requirements. This choice made performance inefficiencies and every operation needs a traversal of complete queue to access last element in tableau column, waste piles and foundation piles. It transforming code \$O(1)\$ stack operation into \$O(n)\$ queue.
+Game code become complex with methods like \verb|get_top_card| and \verb|move_faceup_cards_to()| that constantly reconstructing entire queue through by temporary storages. This approach impact performance as well as game natural card movement into enforced repetitive dequeue and requeue patterns. This implementation make a \textbf{violation} in term of easy we can create logic data in stack such as tableau columns, waste piles and foundation but forcing queues to work as stack. This implementation of queue sacrifices efficiency and code clarity.
+
+
+\subsection*{Final Justification}
+Based on performance analysis and practical implementation:
+\begin{itemize}
+    \item Stacks provide the lowest overall time complexity and are the most efficient for core gameplay.
+    \item Linked Lists offer superior flexibility, particularly for tableau sequence movements.
+    \item Queues are functionally correct but inefficient for this problem.
+\end{itemize}
+
+\textbf{Therefore, the Stack-based approach is the best overall choice} for implementing Klondike Solitaire due to its efficiency, simplicity, and natural alignment with card game mechanics.
+The Linked List approach is a good alternative where flexibility is prioritized, while the Queue-based approach is not to be suggested.
+\section{Individual Contributions}
+\begin{itemize}
+    \item \textbf{Team Collaboration:} Determined the game development schedule, designed the Graphical User Interface (GUI), defined the initial game structure, and managed the early-stage implementation.
+    \item \textbf{Group Leader:} Responsible for overall coordination, report structuring, cross-implementation comparison, and final technical review.
+    \item \textbf{Muhammad Shoaib \&Naveed Abbasi:} Developed the Stack-based Klondike implementation and logic.
+    \item \textbf{M Jamal Ahmad Khan \& Muhammad Wasif:} Developed the Linked List-based Klondike implementation and node management.
+    \item \textbf{Bilal Ahmed Khan \& Mubashir Hassan:} Developed the Queue-based Klondike implementation and FIFO logic adaptation.
+\end{itemize}
+
+\section{Game Screenshots}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{StackVs.jpg}
+\caption{Stack Based Klondike Game GUI}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{IMG-20260112-WA0009.jpg}
+\caption{Linked List based Klondike Game GUI}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{Screenshot 2026-01-12 164217.png}
+\caption{Queue based Klondike Game GUI}
+\end{figure}
+
+
+\section{Conclusion}
+The successful implementation of the Klondike Solitaire game using three distinct data structures-Stack, Linked List, and Queue provides valuable insights into their practical applications. 
+
+Through this project, we observed that while all three data structures can be used in the game but their efficiency varies significantly:
+\begin{itemize}
+    \item \textbf{Stacks} are the most relavent for card games because they naturally follow the Last-In, First-Out (LIFO) behavior of physical card piles.
+    \item \textbf{Linked Lists} offered the highest flexibility, particularly for the Tableau, where moving entire sequences of cards is a core mechanic.
+    \item \textbf{Queues}, while functional, were the least efficient for this specific game because accessing the "top" card required traversing or rotating the entire structure, leading to higher time complexity for simple moves.
+\end{itemize}
+
+In conclusion, this project effectively demonstrated that the choice of data structure is not just about making a program work, but about optimizing performance and simplifying the logic. By integrating these structures with the Raylib GUI, we successfully bridged the gap between theoretical computer science concepts and real-world software development.
+
+\section{References}
+\begin{thebibliography}{9}
+\bibitem{cherry} Cherry, W. (1990). \textit{Microsoft Solitaire History}. Microsoft Corporation.
+\bibitem{yan} Yan, X., et al. (2004). \textit{Solitaire: Man vs. Machine}. University of Alberta.
+\bibitem{longpre} Longpré, L., \& McKenzie, P. (2009). \textit{The Complexity of Solitaire}. Journal of Computer and System Sciences.
+\end{thebibliography}
+
+\end{document}
